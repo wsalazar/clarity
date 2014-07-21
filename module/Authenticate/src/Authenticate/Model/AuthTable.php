@@ -7,6 +7,7 @@ use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Adapter\Driver\ResultInterface;
 use Zend\Session\Container;
 use Users\Entity\User;
+use Sql\src\Sql\Resolver\SqlWrapper;
 use Zend\Db\Sql\Sql;
 //use Zend\Authentication\Adapter\DbTable\CredentialTreatmentAdapter as dbTable;
 
@@ -16,12 +17,14 @@ class AuthTable{
 
     protected $sql;
 
-    public function __construct(Adapter $adapter){
-//        $this->tableGateway = $tableGateway;
-        $this->adapter = $adapter;
-        $this->sql = new Sql($this->adapter);
+    protected $sqlWrapper;
 
-    }
+//    public function __construct(Adapter $adapter){
+//        $this->tableGateway = $tableGateway;
+//        $this->adapter = $adapter;
+//        $this->sql = new Sql($this->adapter);
+//
+//    }
 
     public function storeUserSession($userSession){
         $loginSession= new Container('login');
@@ -30,6 +33,11 @@ class AuthTable{
 //        var_dump($loginSession->sessionDataforUser);
 //        die();
 
+    }
+
+    public function setAuthTable(SqlWrapper $sw)
+    {
+        $this->sqlWrapper = $sw;
     }
 
     public function storeUser($userId){

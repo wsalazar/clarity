@@ -58,6 +58,9 @@ class AuthenticateController extends AbstractActionController{
             $auth = new Auth();
 //            $sm = $this->getServiceLocator();
             $authTable = $this->getServiceLocator()->get('Authenticate\Model\AuthTable');
+            $sw = $this->getServiceLocator()->get('SqlWrapper')->setTable('users');
+            $authTable->setAuthTable($sw);
+
             foreach($register as $method => $value){
                 if ( $method != 'rpassword' ){
                     $setMethods = 'set'.ucfirst($method);

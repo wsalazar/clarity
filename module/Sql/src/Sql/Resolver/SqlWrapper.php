@@ -10,7 +10,7 @@ namespace Sql\src\Sql\Resolver;
 
 use Zend\Db\Sql\Sql;
 use Zend\Db\Adapter\Adapter;
-
+use Zend\Db\Sql\AbstractSql;
 
 class SqlWrapper {
 
@@ -24,25 +24,39 @@ class SqlWrapper {
 
     protected $where;
 
-    public function __construct(Adapter $adapter, $table, $columns, $where = array()){
+    public function __construct(Adapter $adapter) {//}, $table =  null, $columns = array(), $where = array()){
         $this->adapter = $adapter;
-        $this->table = $table;
+//        $this->table = $table;
         $this->sql = new Sql($this->adapter);
-        $this->columns = $columns;
-        $this->where = $where;
+//        $this->columns = $columns;
+//        $this->where = $where;
     }
 
-    public function insert(){
-        $this->sql->insert($this->table);
+    public function setTable($table)
+    {
+        $this->table = $table;
+        return $this;
     }
 
-    public function select(){
-        $select = $this->sql->select($this->table);
-        $this->where($select, $this->where);
+    public function getTable()
+    {
+        return $this->table;
     }
 
-    public function where($select, $where){
-        $select->where($where);
+    public function insert()
+    {
+        $insert = $this->sql->insert($this->getTable());
+    }
+
+    public function select()
+    {
+        $select = $this->sql->select($this->getTable());
+//        $this->where($select, $this->where);
+        
+    }
+
+    public function where(AbstractSql $sql, $where){
+        $sql->where($where);
     }
 
 } 
