@@ -52,7 +52,7 @@ class SqlWrapper {
     {
         $select = $this->sql->select($this->getTable());
 //        $this->where($select, $this->where);
-        
+
     }
 
     public function where(AbstractSql $sql, $where){
