@@ -180,6 +180,8 @@ foreach( $attributes as $att => $attVal){
             );
             echo $soapRes;
         }
+//        unset($attributeToCreate);
+        unset($optionToAdd);
     } catch(SoapFault $e){
         echo $e->getMessage();
     }
