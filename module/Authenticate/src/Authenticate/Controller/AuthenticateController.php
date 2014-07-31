@@ -6,7 +6,7 @@ use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use Zend\Authentication\AuthenticationService as AuthService;
 use Authenticate\Authenticator\AuthenticationAdapter;
-use Users\Entity\User;
+use Authenticate\Entity\User;
 use Authenticate\Model\Auth;
 use Zend\Authentication\Adapter\DbTable;
 use Zend\Mvc\Controller\Plugin\PluginInterface;
@@ -64,6 +64,9 @@ class AuthenticateController extends AbstractActionController{
             $user = new User();
             $auth = new Auth();
             $authTable = $this->getServiceLocator()->get('Authenticate\Model\AuthTable');
+            $sw = $this->getServiceLocator()->get('SqlWrapper')->setTable('users');
+            $authTable->setAuthTable($sw);
+
             foreach($register as $method => $value){
                 if ( $method != 'rpassword' ){
                     $setMethods = 'set'.ucfirst($method);

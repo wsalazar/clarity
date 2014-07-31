@@ -1,4 +1,150 @@
 <?php
+//namespace Authenticate\Model;
+//
+//use Zend\Db\Adapter\Adapter;
+//use Zend\Db\ResultSet\ResultSet;
+//use Zend\Db\TableGateway\TableGateway;
+//use Zend\Db\Adapter\Driver\ResultInterface;
+//use Zend\Session\Container;
+//use Users\Entity\User;
+//use Zend\Db\Sql\Sql;
+//use Zend\Authentication\Adapter\DbTable\CredentialTreatmentAdapter as dbTable;
+//
+//class AuthTable{
+//
+//    protected $tableGateway;
+//
+//    protected $sql;
+//
+//    public function __construct(Adapter $adapter){
+//        $this->tableGateway = $tableGateway;
+//        $this->adapter = $adapter;
+//        $this->sql = new Sql($this->adapter);
+//
+//    }
+//
+//    public function storeUserSession($userSession){
+//        $loginSession= new Container('login');
+//        $userInfo = $userSession->current();
+//        $loginSession->sessionDataforUser = $userInfo;
+//        var_dump($loginSession->sessionDataforUser);
+//        die();
+//
+//    }
+//
+//    public function storeUser($userId){
+//        $this->userId = $userId;
+//        $columns = array('userid','firstname', 'lastname', 'email', 'username', 'password', 'role', 'datecreated');
+//        $select = $this->sql->select('users');
+//        $select->columns($columns)
+//            ->where(array('userid'   =>  $userId));
+//        $statement = $this->sql->prepareStatementForSqlObject($select);
+//        $result = $statement->execute();
+//        $resultSet = new ResultSet;
+//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+//            $resultSet->initialize($result);
+//        }
+//        $this->storeUserSession($resultSet);
+//    }
+//
+//
+//    public function saveUser(User $user){
+//        $select = $this->sql->select('users');
+//        $columns = array('firstname', 'lastname', 'email', 'username', 'password', 'role', 'datecreated');
+//        $select->columns($columns);
+//        $statement = $this->sql->prepareStatementForSqlObject($select);
+//        $result = $statement->execute();
+//        $resultSet = new ResultSet;
+//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+//            $resultSet->initialize($result);
+//        }
+//        $resultSet->rewind();
+//        while($current = $resultSet->current()){
+//            echo "<pre>";
+//                var_dump($current);
+//            $resultSet->next();
+//            if($current['firstname'] == $user->getFirstName() || $current['lastname'] == $user->getLastName() ){
+//                return false;
+//            }
+//        }
+//
+//        for($i = 0; $i < $resultSet->count(); $i++){
+//        die();
+//
+//        $insert = $this->sql->insert('users');
+//        $data = array(
+//            'firstname' => $user->getFirstName(),
+//            'lastname' => $user->getLastName(),
+//            'email'  => $user->getEmail(),
+//            'username'  => $user->getUsername(),
+//            'password'  => $user->getPassword(),
+//            'role'  => $user->getRole(),
+//            'datecreated'   => date('Y-m-d H:i:s')
+//        );
+//
+//        $columns = array(  'firstname' , 'lastname' ,  'email' , 'username'  , 'password'  , 'role' );
+//        var_dump($data);
+//        var_dump($columns);
+//        var_dump(array_keys($data));
+//        var_dump(array_values($data));
+//        $insert->columns(array_keys($data))
+//               ->values($data);
+//        var_dump($insert->getSqlString());
+//        $statement = $this->sql->prepareStatementForSqlObject($insert);
+//        return $statement->execute();
+//        var_dump($statement);
+//        die();
+//        $resultSet = new ResultSet;
+//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+//            $resultSet->initialize($result);
+//        }
+//        $table = new TableGateway('users', $this->adapter);
+//        var_dump($table->executeInsert($insert));
+//        $fields = implode(',',array_keys($data));
+//        $values = implode(',',array_values($data));
+//        echo $fields;
+//die();
+//        foreach($data as $fields => $fieldValues){
+//
+//        }
+
+//        $insertQuery = "INSERT INTO users ($fields) VALUES($values)";
+
+//        $id = (int)$user->getId();
+//        if($id == 0){
+//            return $this->tableGateway->insert($data);
+//            return $dbAdapter->query($insertQuery);die();
+//        }
+        
+//        else{
+//            if ($this->getUser($id)) {
+//                $this->tableGateway->update($data, array('id' => $id));
+//            }
+//
+//            else {
+//                throw new \Exception('User ID does not exist');
+//            }
+//        }
+//    }
+
+//    /**
+//     * Get User account by UserId
+//     * @param string $id
+//     * @throws \Exception
+//     * @return Row
+//     */
+//    public function checkUser($id){
+//        $id  = (int) $id;
+//        $rowset = $this->tableGateway->select(array('id' => $id));
+//        $row = $rowset->current();
+//        if (!$row) {
+//            throw new \Exception("Could not find row $id");
+//        }
+//        return $row;
+//    }
+//
+//=======
+
 namespace Authenticate\Model;
 
 use Zend\Db\Adapter\Adapter;
@@ -6,9 +152,9 @@ use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Adapter\Driver\ResultInterface;
 use Zend\Session\Container;
-use Users\Entity\User;
+use Authenticate\Entity\User;
+use Sql\Resolver\SqlWrapper;
 use Zend\Db\Sql\Sql;
-//use Zend\Authentication\Adapter\DbTable\CredentialTreatmentAdapter as dbTable;
 
 class AuthTable{
     
@@ -16,12 +162,14 @@ class AuthTable{
 
     protected $sql;
 
-    public function __construct(Adapter $adapter){
-//        $this->tableGateway = $tableGateway;
-        $this->adapter = $adapter;
-        $this->sql = new Sql($this->adapter);
+    protected $sqlWrapper;
 
-    }
+//    public function __construct(Adapter $adapter){
+//        $this->tableGateway = $tableGateway;
+//        $this->adapter = $adapter;
+//        $this->sql = new Sql($this->adapter);
+//
+//    }
 
     public function storeUserSession($userSession){
         $loginSession= new Container('login');
@@ -32,46 +180,58 @@ class AuthTable{
 
     }
 
+    public function setAuthTable(SqlWrapper $sw)
+    {
+        $this->sqlWrapper = $sw;
+    }
+
     public function storeUser($userId){
         $this->userId = $userId;
-        $columns = array('userid','firstname', 'lastname', 'email', 'username', 'password', 'role', 'datecreated');
-        $select = $this->sql->select('users');
-        $select->columns($columns)
-            ->where(array('userid'   =>  $userId));
-        $statement = $this->sql->prepareStatementForSqlObject($select);
-        $result = $statement->execute();
-        $resultSet = new ResultSet;
-        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-            $resultSet->initialize($result);
-        }
-        $this->storeUserSession($resultSet);
+        $columns = array('firstname', 'lastname', 'email', 'username', 'password', 'role', 'datecreated');
+        $this->sqlWrapper->columns($columns);
+        $where = array('userid'   =>  $userId);
+        $this->sqlWrapper->where($where);
+        $this->sqlWrapper->select();
+        $results = $this->sqlWrapper->executeQuery();
+//        $columns = array('firstname', 'lastname', 'email', 'username', 'password', 'role', 'datecreated');
+//        $select = $this->sql->select('users');
+//        $select->columns($columns)
+//            ->where(array('userid'   =>  $userId));
+//        $statement = $this->sql->prepareStatementForSqlObject($select);
+//        $result = $statement->execute();
+//        $resultSet = new ResultSet;
+//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+//            $resultSet->initialize($result);
+//        }
+//        $this->storeUserSession($resultSet);
+        $this->storeUserSession($results);
+
     }
 
 
     public function saveUser(User $user){
-        $select = $this->sql->select('users');
+//        $select = $this->sql->select('users');
         $columns = array('firstname', 'lastname', 'email', 'username', 'password', 'role', 'datecreated');
-        $select->columns($columns);
-        $statement = $this->sql->prepareStatementForSqlObject($select);
-        $result = $statement->execute();
-        $resultSet = new ResultSet;
-        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-            $resultSet->initialize($result);
-        }
-        $resultSet->rewind();
-        while($current = $resultSet->current()){
-//            echo "<pre>";
-//                var_dump($current);
-            $resultSet->next();
+        $this->sqlWrapper->columns($columns);
+        $this->sqlWrapper->select();
+        $results = $this->sqlWrapper->executeQuery();
+//        $select->columns($columns);
+//        $statement = $this->sql->prepareStatementForSqlObject($select);
+//        $result = $statement->execute();
+//        $resultSet = new ResultSet;
+//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+//            $resultSet->initialize($result);
+//        }
+        $results->rewind();
+        while( $current = $results->current() ){
+            $results->next();
             if($current['firstname'] == $user->getFirstName() || $current['lastname'] == $user->getLastName() ){
                 return false;
             }
         }
+        $this->sqlWrapper->insert();
 
-//        for($i = 0; $i < $resultSet->count(); $i++){
-//        die();
-
-        $insert = $this->sql->insert('users');
+//        $insert = $this->sql->insert('users');
         $data = array(
             'firstname' => $user->getFirstName(),
             'lastname' => $user->getLastName(),
@@ -81,17 +241,21 @@ class AuthTable{
             'role'  => $user->getRole(),
             'datecreated'   => date('Y-m-d H:i:s')
         );
-
 //        $columns = array(  'firstname' , 'lastname' ,  'email' , 'username'  , 'password'  , 'role' );
+        $this->sqlWrapper->columns(array_keys($data));
+        $this->sqlWrapper->values($data);
+        $this->sqlWrapper->executeQuery();
+
+
 //        var_dump($data);
 //        var_dump($columns);
 //        var_dump(array_keys($data));
 //        var_dump(array_values($data));
-        $insert->columns(array_keys($data))
-               ->values($data);
+//        $insert->columns(array_keys($data))
+//               ->values($data);
 //        var_dump($insert->getSqlString());
-        $statement = $this->sql->prepareStatementForSqlObject($insert);
-        return $statement->execute();
+//        $statement = $this->sql->prepareStatementForSqlObject($insert);
+//        return $statement->execute();
 //        var_dump($statement);
 //        die();
 //        $resultSet = new ResultSet;
@@ -143,4 +307,5 @@ class AuthTable{
         return $row;
     }
 
+//>>>>>>> 9b8a9d42d676c7915d0c201dbc3b7c7d9e0a8de8
 }
