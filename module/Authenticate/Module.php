@@ -18,4 +18,16 @@ class Module
             ),
         );
     }
+
+    public function getServiceConfig() {
+        return array(
+            'factories' => array(
+                'Authenticate\Model\AuthTable' => function($sm) {
+//                        $dbAdapter = $sm->get('Zend\Db\Adapter\Adapter');
+                        $table = new Model\AuthTable();
+                        return $table;
+                    },
+            ),
+        );
+    }
 }

@@ -37,8 +37,9 @@ class AuthenticateController extends AbstractActionController{
                 $userId = $authAdapter->getResultRowObject('userid')->userid;
                 $authService->getStorage()
                     ->write($userId);
-
+                $sw = $this->getServiceLocator()->get('SqlWrapper')->setTable('users');
                 $authTable = $this->getServiceLocator()->get('Authenticate\Model\AuthTable');
+                $authTable->setAuthTable($sw);
                 $authTable->storeUser($userId);
                 return $this->redirect()->toUrl('/');
 

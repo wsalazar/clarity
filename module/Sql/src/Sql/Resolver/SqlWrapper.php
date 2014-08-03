@@ -144,10 +144,10 @@ class SqlWrapper {
     {
         $statement = $this->sql->prepareStatementForSqlObject($this->sql);
         $result = $statement->execute();
-        if(){
-            return $result;
-        }
-        else{
+//        if(){
+//            return $result;
+//        }
+//        else{
         $resultSet = new ResultSet;
         if ($result instanceof ResultInterface && $result->isQueryResult()) {
             $resultSet->initialize($result);
