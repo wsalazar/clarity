@@ -62,6 +62,8 @@ class AuthenticateController extends AbstractActionController{
         if($request->isPost()) {
             $register = (array) $request->getPost();
             $user = new User();
+            $this->getServiceLocator()->get('user_manager')->createUser($register);
+            die();
             $auth = new Auth();
             $authTable = $this->getServiceLocator()->get('Authenticate\Model\AuthTable');
             foreach($register as $method => $value){

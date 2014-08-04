@@ -50,10 +50,12 @@ return array(
             ),
         ),
     ),
-    'services' => array(
-        // Keys are the service names
-        // Values are objects
-        'auth_service' => new Authenticate\Authenticator\AuthenticationAdapter(),
+    'service_manager'   =>  array(
+        'services'  =>   array(
+//            'user_manager'  =>  new Authenticate\Entity\User\UserManager(new Authenticate\Entity\User\UserFactory()),
+//            'user_factory'  =>  'Authenticate\Entity\User\UserFactory',
+            'user_manager'  =>  'Authenticate\Entity\User\UserManager',
+        ),
     ),
 
     'controllers' => array('invokables' => array('Authenticate\Controller\Authenticate' => 'Authenticate\Controller\AuthenticateController')),
