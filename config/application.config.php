@@ -5,18 +5,23 @@
  *
  * @see https://github.com/zendframework/ZFTool
  */
+
+$env = getenv("APP_ENV") ? : 'production';
+
+$modules = array(
+    'Authenticate',
+    'Common',
+    'Search',
+    'Users',
+    'Api'
+);
+
+if($env == "development") {
+    $modules[] = 'ZendDeveloperTools';
+}
+
 return array(
-    'modules' => array(
-        'ZendDeveloperTools',
-//        'DoctrineModule',
-//        'DoctrineORMModule',
-        'Authenticate',
-        'Common',
-//        'ZFTool',
-        'Search',
-        'Users',
-        'Api',
-        ),
+    'modules' => $modules,
     'module_listener_options' => array(
         'config_glob_paths' => array('config/autoload/{,*.}{global,local}.php'),
         'module_paths' => array(
