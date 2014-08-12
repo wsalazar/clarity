@@ -28,7 +28,7 @@ return array(
                     )
                 )
             ),
-            'revertOldNew'   =>  array(
+            'revert'   =>  array(
                 'type'  =>  'literal',
                 'options'   =>  array(
                     'route' =>  '/sku-history/revert',
@@ -50,5 +50,10 @@ return array(
         'invokables'    =>  array(
             'Logging\Controller\Logging'    =>  'Logging\Controller\LoggingController',
         )
-    )
+    ),
+    'service_manager'   =>  array(
+        'invokables'    =>  array(
+            'Listeners' =>  'Listeners\Event\Listener',
+        ),
+    ),
 );

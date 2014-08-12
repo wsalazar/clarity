@@ -111,8 +111,11 @@ return array(
     ),
 
     'view_manager' => array('template_path_stack' => array(__DIR__ . '/../view')),
-
-
+    'service_manager'   =>  array(
+        'invokables'    =>  array(
+            'EventListeners' =>  'Listeners\Event\Listener',
+        ),
+    ),
     'di' => array(
     'services' => array(
         'Search' => 'Search\Model\SearchTable')),

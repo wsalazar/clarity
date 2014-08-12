@@ -6,8 +6,12 @@
  * @see https://github.com/zendframework/ZFTool
  */
 return array(
+    'listeners' =>  array(
+        'EventListeners',
+    ),
     'modules' => array(
         'ZendDeveloperTools',
+        'Listeners',
 //        'DoctrineModule',
 //        'DoctrineORMModule',
         'Authenticate',
