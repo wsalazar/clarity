@@ -8,16 +8,21 @@
 return array(
     'modules' => array(
         'ZendDeveloperTools',
-//        'DoctrineModule',
-//        'DoctrineORMModule',
+        'DoctrineMigrationsModule',
         'Authenticate',
         'Common',
-//        'ZFTool',
         'Search',
         'Users',
         'Api',
         'Logging',
         ),
+    'doctrine' => array(
+        'migrations' => array(
+            'migrations_table' => 'migrations',
+            'migrations_namespace' => 'Application',
+            'migrations_directory' => 'data/migrations',
+        ),
+    ),
     'module_listener_options' => array(
         'config_glob_paths' => array('config/autoload/{,*.}{global,local}.php'),
         'module_paths' => array(

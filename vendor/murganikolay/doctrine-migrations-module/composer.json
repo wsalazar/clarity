@@ -1,0 +1,33 @@
+{
+    "name": "murganikolay/doctrine-migrations-module",
+    "description": "Doctrine migrations module for Zend Framework 2",
+    "homepage": "https://github.com/MurgaNikolay/DoctrineMigrationsModule",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "zf2",
+        "zend",
+        "module",
+        "doctrine",
+        "migrations"
+    ],
+    "minimum-stability": "dev",
+
+    "stability": "dev",
+    "authors": [
+        {
+            "name": "Murga Nikolay",
+            "email": "work@murga.kiev.ua"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "doctrine/doctrine-module": "0.7.*",
+        "doctrine/migrations": "v1.0-ALPHA1"
+    },
+    "autoload": {
+        "psr-0": {
+            "DoctrineMigrationsModule\\": "src/"
+        }
+    }
+}

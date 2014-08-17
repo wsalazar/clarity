@@ -18,6 +18,8 @@
         "zendframework/zendframework": "2.*",
         "zendframework/zendservice-amazon": "2.*@dev",
         "doctrine/doctrine-orm-module": "0.7",
-        "zendframework/zend-developer-tools": "dev-master"
+        "zendframework/zend-developer-tools": "dev-master",
+        "doctrine/migrations": "1.0-ALPHA1",
+        "murganikolay/doctrine-migrations-module": "1.0.0"
     }
 }
