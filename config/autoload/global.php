@@ -41,15 +41,11 @@ return array(
             'navigation' => 'Zend\Navigation\Service\DefaultNavigationFactory',
             'Zend\Db\Adapter\Adapter' =>'Zend\Db\Adapter\AdapterServiceFactory',
             'sessionService'    =>  function (ServiceLocatorInterface $serviceLocator){
-                    $sessionNames  =  array(
-                        'intranet',
-                        'login',
-                        'dirty_skus',
-                    );
+                    $sessionNames  =  array('intranet','login','dirty_skus',);
                     foreach($sessionNames as $sessions){
                         $sessionContainer = new \Zend\Session\Container($sessions);
-                        $sessionService = new SessionService();
-                        $sessionService->setSessionContainer($sessionContainer);
+                        $sessionService = new Search\Services\SessionService($serviceLocator, $sessionContainer);
+//                        $sessionService->setSessionContainer($sessionContainer);
                     }
                     return $sessionService;
 
