@@ -483,10 +483,10 @@ class MagentoTable {
     {
         $select = $this->sql->select();
         $filter = new Where();
-        $filter->in('relatedproductstable.dataState',array(2,3));
-        $select->from('relatedproductstable')
+        $filter->in('productlink.dataState',array(2,3));
+        $select->from('productlink')
                ->columns(array('entityId'=>'entity_id','linkedEntityId'=>'linked_entity_id', 'dataState'=>'dataState'))
-               ->join( array('p'=>'product'), 'p.entity_id=relatedproductstable.entity_id',array('sku'=>'productid'))
+//               ->join( array('p'=>'product'), 'p.entity_id=productlink.entity_id',array('sku'=>'productid'))
 //               ->where(array('productcategory.dataState'=>2,'productcategory.dataState'=>3),PredicateSet::OP_OR);
                ->where($filter);
         $statement = $this->sql->prepareStatementForSqlObject($select);
@@ -497,6 +497,9 @@ class MagentoTable {
         }
         //TODO have to implement a count feature for this.
 //        $resultSet->count()
+        echo "<pre>";
+        var_dump($resultSet->toArray());
+        die();
         return $resultSet->toArray();
     }
 
