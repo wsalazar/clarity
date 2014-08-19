@@ -387,21 +387,27 @@ class MagentoTable {
         return $this->dirtyCount;
     }
 
-
-//        public function lookupAttribute($key)
-//        {
-//            switch($key){
-//                case 'sku':
-//                    return 'product';
-//                case 'title':
-//                    return 'name';
-//                case 'description':
-//                    return $key;
-//                case 'urlKey':
-//                    return 'url_key';
-//            }
-//
-//        }
+    public function soapRelatedProducts($relatedProds)
+    {
+        $soapHandle = new Client(SOAP_URL);
+        $session = $soapHandle->call('login',array(SOAP_USER, SOAP_USER_PASS));
+        $packet = array();
+        foreach($relatedProds as $key => $fields){
+            $entityId = $relatedProds[$key]['entityId'];
+            $dataState = (int)$relatedProds[$key]['dataState'];
+            $linkedEntityId = $relatedProds[$key]['linkedEntityId'];
+            if( 3 === $dataState ){
+                $packet[$key] = array($session, PRODUCT_DELETE_RELATED, array('type'=>'related', 'product'=>$entityId, 'linkedProduct'=>$linkedEntityId ));
+            }
+            if( 2 === $dataState ){
+                $packet[$key] = array($session, PRODUCT_ASSIGN_RELATED, array('type'=>'related', 'product'=>$entityId, 'linkedProduct'=>$linkedEntityId ));
+            }
+        }
+        foreach($packet as $key => $batch){
+            $results = $soapHandle->call('call', $batch );
+        }
+        return $results;
+    }
 
     public function soapMedia($media = array())
     {
@@ -473,6 +479,27 @@ class MagentoTable {
         return $results;
     }
 
+    public function fetchRelatedProducts()
+    {
+        $select = $this->sql->select();
+        $filter = new Where();
+        $filter->in('relatedproductstable.dataState',array(2,3));
+        $select->from('relatedproductstable')
+               ->columns(array('entityId'=>'entity_id','linkedEntityId'=>'linked_entity_id', 'dataState'=>'dataState'))
+               ->join( array('p'=>'product'), 'p.entity_id=relatedproductstable.entity_id',array('sku'=>'productid'))
+//               ->where(array('productcategory.dataState'=>2,'productcategory.dataState'=>3),PredicateSet::OP_OR);
+               ->where($filter);
+        $statement = $this->sql->prepareStatementForSqlObject($select);
+        $result = $statement->execute();
+        $resultSet = new ResultSet;
+        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+            $resultSet->initialize($result);
+        }
+        //TODO have to implement a count feature for this.
+//        $resultSet->count()
+        return $resultSet->toArray();
+    }
+
     public function fetchCategoriesSoap()
     {
         $select = $this->sql->select();
@@ -513,11 +540,8 @@ class MagentoTable {
             }
         }
         foreach($packet as $key => $batch){
-//         echo '<pre>';
-//            var_dump($batch);
             $results = $soapHandle->call('call', $batch );
         }
-//        die();
         return $results;
     }
 
