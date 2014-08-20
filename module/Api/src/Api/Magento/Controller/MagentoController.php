@@ -62,7 +62,7 @@ class MagentoController  extends AbstractActionController {
 
     protected function soapItemAction()
     {
-        $categorySoapResponse = $response = false;
+        $categorySoapResponse = $response = $linkedResponse = false;
         $loginSession= new Container('login');
         $userLogin = $loginSession->sessionDataforUser;
         if(empty($userLogin)){
@@ -72,8 +72,8 @@ class MagentoController  extends AbstractActionController {
         $dirtyData = $session->dirtyProduct;
 
         /*Fetch categories*/
-        $categories = $this->getMagentoTable()->fetchCategoriesSoap();
-        $relatedProds = $this->getMagentoTable()->fetchRelatedProducts();
+        $categories = $this->getMagentoTable()->fetchCategories();
+        $linkedProds = $this->getMagentoTable()->fetchLinkedProducts();
         if(!empty($categories)){
             /*Make api call to delete and update Sku with new category*/
             $categorySoapResponse = $this->getMagentoTable()->soapCategoriesUpdate($categories);
@@ -82,12 +82,12 @@ class MagentoController  extends AbstractActionController {
             /*Update Mage with up-to-date products*/
             $response = $this->getMagentoTable()->soapContent($dirtyData);
         }
-        if(!empty($relatedProds)){
+        if(!empty($linkedProds)){
             /*Update Mage with up-to-date products*/
-            $response = $this->getMagentoTable()->soapRelatedProducts($relatedProds);
+            $linkedResponse = $this->getMagentoTable()->soapLinkedProducts($linkedProds);
         }
 
-        if( $categorySoapResponse || $response){
+        if( $categorySoapResponse || $response || $linkedResponse ){
 
             foreach($response as $soapResponse){
                 if( preg_match('/Product/', $soapResponse)){
@@ -103,11 +103,12 @@ class MagentoController  extends AbstractActionController {
                 }
             }
 
-            if($res === true || (!is_null($categorySoapResponse) &&  $categorySoapResponse === true) ){
+            if($res === true || (!is_null($categorySoapResponse) &&  $categorySoapResponse === true) || (!is_null($linkedResponse) && $linkedResponse === true) ){
 //                TODO have to find what out what the update statement actually returns.
                 $updateCategories = $this->getMagentoTable()->updateProductCategories($categories);
                 $updateFields = $this->getMagentoTable()->updateToClean($dirtyData);
-                if($updateFields || $updateCategories){
+                $linkedFields = $this->getMagentoTable()->updateLinkedProducts($linkedProds);
+                if($updateFields || $updateCategories || $linkedFields){
                     return $this->redirect()->toRoute('apis');
               }
             }

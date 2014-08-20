@@ -45,10 +45,7 @@ class MagentoTable {
         $this->sql = new Sql($this->adapter);
     }
 
-    public function fetchImages()
-    {
-        return $this->productAttribute($this->sql,array(),array('dataState'=>2),'images')->toArray();
-    }
+
 
     public function lookupClean()
     {
@@ -387,26 +384,75 @@ class MagentoTable {
         return $this->dirtyCount;
     }
 
-    public function soapRelatedProducts($relatedProds)
+    public function fetchLinkedProducts()
+    {
+        $select = $this->sql->select();
+        $filter = new Where();
+        $filter->in('productlink.dataState',array(2,3));
+        $select->from('productlink')
+            ->columns(array('entityId'=>'entity_id','linkedEntityId'=>'linked_entity_id', 'dataState'=>'dataState'))
+            ->join( array('t'=>'productlink_type'), 't.link_type_id=productlink.link_type_id',array('type'=>'code'))
+//               ->join( array('p'=>'product'), 'p.entity_id=productlink.entity_id',array('sku'=>'productid'))
+//               ->where(array('productcategory.dataState'=>2,'productcategory.dataState'=>3),PredicateSet::OP_OR);
+            ->where($filter);
+        $statement = $this->sql->prepareStatementForSqlObject($select);
+        $result = $statement->execute();
+        $resultSet = new ResultSet;
+        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+            $resultSet->initialize($result);
+        }
+        //TODO have to implement a count feature for this.
+//        $resultSet->count()
+        return $resultSet->toArray();
+    }
+
+    public function soapLinkedProducts($linkedProds)
     {
         $soapHandle = new Client(SOAP_URL);
         $session = $soapHandle->call('login',array(SOAP_USER, SOAP_USER_PASS));
         $packet = array();
-        foreach($relatedProds as $key => $fields){
-            $entityId = $relatedProds[$key]['entityId'];
-            $dataState = (int)$relatedProds[$key]['dataState'];
-            $linkedEntityId = $relatedProds[$key]['linkedEntityId'];
+        foreach($linkedProds as $key => $fields){
+            $entityId = $linkedProds[$key]['entityId'];
+            $dataState = (int)$linkedProds[$key]['dataState'];
+            $linkedEntityId = $linkedProds[$key]['linkedEntityId'];
+            $type = $linkedProds[$key]['type'];
             if( 3 === $dataState ){
-                $packet[$key] = array($session, PRODUCT_DELETE_RELATED, array('type'=>'related', 'product'=>$entityId, 'linkedProduct'=>$linkedEntityId ));
+                $packet[$key] = array($session, PRODUCT_DELETE_RELATED, array('type'=>$type, 'product'=>$entityId, 'linkedProduct'=>$linkedEntityId ));
             }
             if( 2 === $dataState ){
-                $packet[$key] = array($session, PRODUCT_ASSIGN_RELATED, array('type'=>'related', 'product'=>$entityId, 'linkedProduct'=>$linkedEntityId ));
+                $packet[$key] = array($session, PRODUCT_ASSIGN_RELATED, array('type'=>$type, 'product'=>$entityId, 'linkedProduct'=>$linkedEntityId ));
             }
         }
         foreach($packet as $key => $batch){
             $results = $soapHandle->call('call', $batch );
         }
         return $results;
+    }
+
+    public function updateLinkedProducts($linkedProducts)
+    {
+        $result ='';
+        foreach($linkedProducts as $key => $fields){
+            $dataState = (int)$linkedProducts[$key]['dataState'];
+            if( $dataState === 2){
+                $update = $this->sql->update('productlink');
+                $update->set(array('dataState'=>0))
+                    ->where(array('entity_id'=>$linkedProducts[$key]['entityId'], 'linked_entity_id'=>$linkedProducts[$key]['linkedEntityId']));
+                $statement = $this->sql->prepareStatementForSqlObject($update);
+                $result = $statement->execute();
+            } else {
+                $delete = $this->sql->delete('productlink');
+                $delete->where(array('entity_id'=>$linkedProducts[$key]['entityId'], 'linked_entity_id'=>$linkedProducts[$key]['linkedEntityId']));
+                $statement = $this->sql->prepareStatementForSqlObject($delete);
+                $result = $statement->execute();
+            }
+        }
+        return $result;
+    }
+
+    public function fetchImages()
+    {
+        return $this->productAttribute($this->sql,array(),array('dataState'=>2),'images')->toArray();
     }
 
     public function soapMedia($media = array())
@@ -479,31 +525,16 @@ class MagentoTable {
         return $results;
     }
 
-    public function fetchRelatedProducts()
+    public function updateImagesToClean()
     {
-        $select = $this->sql->select();
-        $filter = new Where();
-        $filter->in('productlink.dataState',array(2,3));
-        $select->from('productlink')
-               ->columns(array('entityId'=>'entity_id','linkedEntityId'=>'linked_entity_id', 'dataState'=>'dataState'))
-//               ->join( array('p'=>'product'), 'p.entity_id=productlink.entity_id',array('sku'=>'productid'))
-//               ->where(array('productcategory.dataState'=>2,'productcategory.dataState'=>3),PredicateSet::OP_OR);
-               ->where($filter);
-        $statement = $this->sql->prepareStatementForSqlObject($select);
-        $result = $statement->execute();
-        $resultSet = new ResultSet;
-        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-            $resultSet->initialize($result);
+        $result ='';
+        foreach($this->imgPk as $pk){
+            $result = $this->productUpdateaAttributes($this->sql, 'images', array('dataState'=>0), array('value_id'=>$pk));
         }
-        //TODO have to implement a count feature for this.
-//        $resultSet->count()
-        echo "<pre>";
-        var_dump($resultSet->toArray());
-        die();
-        return $resultSet->toArray();
+        return $result;
     }
 
-    public function fetchCategoriesSoap()
+    public function fetchCategories()
     {
         $select = $this->sql->select();
         $filter = new Where();
@@ -548,6 +579,27 @@ class MagentoTable {
         return $results;
     }
 
+    public function updateProductCategories($catsToUpdate)
+    {
+        $result ='';
+        foreach($catsToUpdate as $key => $fields){
+            $dataState = (int)$catsToUpdate[$key]['dataState'];
+            if( $dataState === 2){
+                $update = $this->sql->update('productcategory');
+                $update->set(array('dataState'=>0))
+                    ->where(array('entity_id'=>$catsToUpdate[$key]['entityId'], 'category_id'=>$catsToUpdate[$key]['categortyId']));
+                $statement = $this->sql->prepareStatementForSqlObject($update);
+                $result = $statement->execute();
+            } else {
+                $delete = $this->sql->delete('productcategory');
+                $delete->where(array('entity_id'=>$catsToUpdate[$key]['entityId'], 'category_id'=>$catsToUpdate[$key]['categortyId']));
+                $statement = $this->sql->prepareStatementForSqlObject($delete);
+                $result = $statement->execute();
+            }
+        }
+        return $result;
+    }
+
     public function soapContent($data)
     {
         $soapClient = new SoapClient(SOAP_URL);
@@ -584,35 +636,6 @@ class MagentoTable {
         return $result;
     }
 
-    public function updateImagesToClean()
-    {
-        $result ='';
-        foreach($this->imgPk as $pk){
-            $result = $this->productUpdateaAttributes($this->sql, 'images', array('dataState'=>0), array('value_id'=>$pk));
-        }
-        return $result;
-    }
-
-    public function updateProductCategories($catsToUpdate)
-    {
-        $result ='';
-        foreach($catsToUpdate as $key => $fields){
-            $dataState = (int)$catsToUpdate[$key]['dataState'];
-            if( $dataState === 2){
-                $update = $this->sql->update('productcategory');
-                $update->set(array('dataState'=>0))
-                       ->where(array('entity_id'=>$catsToUpdate[$key]['entityId'], 'category_id'=>$catsToUpdate[$key]['categortyId']));
-                $statement = $this->sql->prepareStatementForSqlObject($update);
-                $result = $statement->execute();
-            } else {
-                $delete = $this->sql->delete('productcategory');
-                $delete->where(array('entity_id'=>$catsToUpdate[$key]['entityId'], 'category_id'=>$catsToUpdate[$key]['categortyId']));
-                $statement = $this->sql->prepareStatementForSqlObject($delete);
-                $result = $statement->execute();
-            }
-        }
-        return $result;
-    }
 
     public function updateToClean($data)
     {
