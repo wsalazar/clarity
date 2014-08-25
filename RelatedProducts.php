@@ -57,7 +57,7 @@ $linkedProducts =
 ['sku'=>'4810',[['related'=>'FC-4AACH'],['related'=>'FC-SP6'],['related'=>'FC-CL5'],['related'=>'FC-FC1'],['related'=>'VIV-FB-150'],]]
 ];
 echo "<pre>";
-$conn = mysqli_connect('192.168.0.40', 'root', 'krimson1', 'spex');
+$conn = mysqli_connect(HOST, USER, PASS, DB);
 $soapHandle = new Client(SOAP_URL);
 $session = $soapHandle->call('login',array(SOAP_USER, SOAP_USER_PASS));
 $packet = array();
