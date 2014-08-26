@@ -1,8 +1,7 @@
 <?php
 
 include 'config/autoload/local.php';
-$conn = mysqli_connect('192.168.0.40', 'root', 'krimson1', 'spex');
-
+$conn = mysqli_connect(HOST, USER, PASS, DB);
 
 $soapClient = new SoapClient(SOAP__NEW_URL);
 $session = $soapClient->login(SOAP_USER, SOAP_USER_PASS);
