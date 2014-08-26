@@ -44,7 +44,7 @@ class MagentoTable {
 
     public function fetchImages()
     {
-        $select = $this->sql->select()->from('productattribute_images')->where(['dataState'=>2])->join(['p'=>'product'],'productattribute_images.entity_id = p.entity_id',['sku'=>'productid']);
+        $select = $this->sql->select()->from('productattribute_images')->where(['productattribute_images.dataState'=>2])->join(['p'=>'product'],'productattribute_images.entity_id = p.entity_id',['sku'=>'productid']);
         $select->quantifier(Select::QUANTIFIER_DISTINCT);
         $statement = $this->sql->prepareStatementForSqlObject($select);
         $result = $statement->execute();

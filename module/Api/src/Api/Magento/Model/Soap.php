@@ -27,6 +27,7 @@ class Soap extends AbstractSoap
 
     public function soapMedia($media = array())
     {
+        $packet = [];
         $imageBatch = array();
 //        if(!is_array($media)) {
 //            throw new \InvalidArgumentException(
@@ -44,6 +45,7 @@ class Soap extends AbstractSoap
             $imageBatch[$key]['label'] = $media[$key]['label'];
             $imageBatch[$key]['disabled'] = $media[$key]['disabled'];
             $imageBatch[$key]['value_id'] = $media[$key]['value_id'];
+            $imageBatch[$key]['sku'] = $media[$key]['sku'];
             $entityId = $media[$key]['entity_id'];
             $imgPath = file_get_contents("public".$imgName);
 //                $imgPath = 'http://www.focuscamera.com/media/catalog/product'.$imgName;
@@ -59,7 +61,7 @@ class Soap extends AbstractSoap
             $imageBatch[$key]['imageFile'] = $file;
 
         }
-        $results = array();
+        $results = false;
         foreach($imageBatch as $key => $batch){
             $entityId = $imageBatch[$key]['entityId'];
             $this->imgPk[] = $imageBatch[$key]['value_id'];
@@ -67,32 +69,21 @@ class Soap extends AbstractSoap
             $position = $imageBatch[$key]['position'];
             $disabled = $imageBatch[$key]['disabled'];
             $label = $imageBatch[$key]['label'];
-            $select = $this->sql->select();
-            $select->from('product')->columns(array('sku'=>'productid'))->where(array('entity_id'=>$entityId));
-            $statement = $this->sql->prepareStatementForSqlObject($select);
-            $result = $statement->execute();
-            $resultSet = new ResultSet;
-            if ($result instanceof ResultInterface && $result->isQueryResult()) {
-                $resultSet->initialize($result);
-            }
-            $products = $resultSet->toArray();
-            $sku = $products[0]['sku'];
-            $packet = array(
+            $sku = $imageBatch[$key]['sku'];
+            $packet[$key] = [$this->session,PRODUCT_ADD_MEDIA, [
                 $sku,
-                array(
+               [
                     'file'  =>  $fileContents,
                     'label' =>  $label,//'no label',
                     'position'  =>  $position,//'0',
 //                        'types' =>  array('thumbnail'), //what kind of images is this?
                     'excludes'  =>  0,
                     'remove'    =>  0,
-                    'disabled'  =>  0,
-                )
-            );
-            $batch = array($this->session, PRODUCT_ADD_MEDIA, $packet);
-            $results[] = $this->soapHandle->call('call', $batch);
+                    'disabled'  =>  0,  //$disabled variable would normally be here.
+                ]
+            ]];
         }
-        return $results;
+        return $this->soapCall($packet);
     }
 
     public function soapCategoriesUpdate($categories)
@@ -113,20 +104,7 @@ class Soap extends AbstractSoap
                 $packet[$key] = array($this->session, PRODUCT_ASSIGN_CATEGORY, array('categoryId'=>$categortyId,'product'=>$entityId ));
             }
         }
-
-        $a = 0;
-        $batch = [];
-        while( $a < count($packet) ){
-            $x = 0;
-            while($x < 10 && $a < count($packet)){
-                $batch[$x] = $packet[$a];
-                $x++;
-                $a++;
-            }
-            sleep(15);
-            $results = $this->soapHandle->call('multiCall', $batch);
-        }
-        return $results;
+        return $this->soapCall($packet);
     }
 
     public function soapContent($data)
@@ -168,8 +146,6 @@ class Soap extends AbstractSoap
 
     public function soapAddProducts($newProds)
     {
-        echo '<pre>';
-        $results = false;
         $packet = [];
 //        $soapHandle = new Client(SOAP_URL);
 //        $session = $this->soapHandle->call('login',array(SOAP_USER, SOAP_USER_PASS));
@@ -192,7 +168,6 @@ class Soap extends AbstractSoap
         }
         return $results;
 */
-
         $count = 0;
         $set = [];
         foreach($newProds as $index => $fields){
@@ -210,18 +185,6 @@ class Soap extends AbstractSoap
             $packet[$count] = [$this->session, 'catalog_product.create', ['simple', $attributeSet['set_id'], $sku, $set]];
             $count++;
         }
-        $count = 0;
-        $batch = [];
-        while($count < count($packet)){
-            $packetCount = 0;
-            while($packetCount < 10 && $count < count($packet)){
-                $batch[$packetCount] = $packet[$count];
-                $packetCount++;
-                $count++;
-            }
-            $results = $this->soapHandle->call('multiCall', $batch);
-            sleep(2);
-        }
-        return $results;
+        return $this->soapCall($packet);
     }
 } 
