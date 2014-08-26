@@ -12,7 +12,6 @@ use Zend\Db\Exception\UnexpectedValueException;
 use Zend\View\Model\ViewModel;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\Session\Container;
-use Search\Controller\FormController;
 use Search\Tables\Spex;
 
 class MagentoController  extends AbstractActionController
@@ -68,7 +67,7 @@ class MagentoController  extends AbstractActionController
 
     protected function soapItemAction()
     {
-        $categorySoapResponse = $response = false;
+        $categorySoapResponse = $response = $res = false;
         $loginSession= new Container('login');
         $userLogin = $loginSession->sessionDataforUser;
         if(empty($userLogin)){
@@ -82,15 +81,15 @@ class MagentoController  extends AbstractActionController
         $relatedProds = $this->getMagentoTable()->fetchRelatedProducts();
         if(!empty($categories)){
             /*Make api call to delete and update Sku with new category*/
-            $categorySoapResponse = $this->getMagentoTable()->soapCategoriesUpdate($categories);
+            $categorySoapResponse = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapCategoriesUpdate($categories);
         }
         if(!empty($dirtyData)){
             /*Update Mage with up-to-date products*/
-            $response = $this->getMagentoTable()->soapContent($dirtyData);
+            $response = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapContent($dirtyData);
         }
         if(!empty($relatedProds)){
             /*Update Mage with up-to-date products*/
-            $response = $this->getMagentoTable()->soapRelatedProducts($relatedProds);
+            $response = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapRelatedProducts($relatedProds);
         }
 
         if( $categorySoapResponse || $response){
@@ -166,13 +165,13 @@ class MagentoController  extends AbstractActionController
             return $this->redirect()->toRoute('auth', array('action'=>'index') );
         }
         $images = $this->getMagentoTable()->fetchImages();
-        if($this->getMagentoTable()->soapMedia($images)) {
+        if($this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapMedia($images)) {
             if($this->getMagentoTable()->updateImagesToClean()){
                 return $this->redirect()->toRoute('apis', array('action'=>'magento'));
             }
         }
     }
-
+    //TODO maybe add getServiceLocator as a service to be injected into all controllers
     public function getMagentoTable()
     {
         if (!$this->magentoTable) {
