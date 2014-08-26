@@ -40,6 +40,9 @@ class FormController extends AbstractActionController {
         $sku = $this->params()->fromRoute('sku');
         $form = $this->getFormTable();
 
+        if(!$sku){
+            $this->redirect()->toRoute('search');
+        }
         if($sku){
             $entityID = $form->validateSku($sku);
             //insert error handle for invalid sku here
