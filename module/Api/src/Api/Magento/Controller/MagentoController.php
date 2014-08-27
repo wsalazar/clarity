@@ -36,13 +36,18 @@ class MagentoController  extends AbstractActionController
             return $this->redirect()->toRoute('auth', array('action'=>'index') );
         }
         $this->skuData = array();
+        /*This method looks up all the dirty products and attributes*/
         $this->skuData = $this->getMagentoTable()->lookupDirt();
-//        echo '<pre>';
-//        var_dump($this->skuData);
-//        die();
-//        $cleanCount = $this->getMagentoTable()->lookupClean();
-//        $newCount = $this->getMagentoTable()->lookupNew();
-        $images = $this->getMagentoTable()->lookupNewUpdatedImages();
+        /*Fetch the count to all products and product attributes*/
+        $changedProductsCount = $this->getServiceLocator()->get('Api\Magento\Model\FetchProductsMetric')->fetchChangedProductsCount();
+
+        /*TODO Have to add UI to display the images to be sent over soap to Magento side*/
+//        $images = $this->getMagentoTable()->lookupNewUpdatedImages();
+        /*Fetches the count to all images that have been added. Does not include images who's labels have changed. Data State of 1 for updated*/
+        $images = $this->getServiceLocator()->get('Api\Magento\Model\FetchProductsMetric')->fetchNewImagesCount();
+
+
+
         $tableHeaders = array('ID','SKU','Attribute Field','New Attribute Value','Last Modified Date','Changed By');
         $session = new Container('dirty_skus');
         $dirtySkus = array();
@@ -60,7 +65,7 @@ class MagentoController  extends AbstractActionController
 //                'cleanCount'    => $cleanCount,
 //                'newCount'    => $newCount,
                 'newImages'    => $images,
-                'dirtyCount' => $this->getMagentoTable()->getDirtyItems()
+                'changedProductsCount' => $changedProductsCount,
             )
         );
     }
@@ -77,40 +82,53 @@ class MagentoController  extends AbstractActionController
         $dirtyData = $session->dirtyProduct;
 
         /*Fetch categories*/
-        $categories = $this->getMagentoTable()->fetchCategoriesSoap();
-        $relatedProds = $this->getMagentoTable()->fetchRelatedProducts();
-        if(!empty($categories)){
+//        $categories = $this->getMagentoTable()->fetchCategoriesSoap();
+//        $relatedProds = $this->getMagentoTable()->fetchRelatedProducts();
+//        if(!empty($categories)){
             /*Make api call to delete and update Sku with new category*/
-            $categorySoapResponse = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapCategoriesUpdate($categories);
-        }
+//            $categorySoapResponse = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapCategoriesUpdate($categories);
+//        }
         if(!empty($dirtyData)){
             /*Update Mage with up-to-date products*/
             $response = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapContent($dirtyData);
         }
-        if(!empty($relatedProds)){
+//        if(!empty($relatedProds)){
             /*Update Mage with up-to-date products*/
-            $response = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapRelatedProducts($relatedProds);
-        }
-
+//            $response = $this->getServiceLocator()->get('Api\Magento\Model\Soap')->soapRelatedProducts($relatedProds);
+//        }
+echo '<pre>';
         if( $categorySoapResponse || $response){
+            foreach($response as $key => $soapRes){
+                foreach($soapRes as $ind => $soap){
+                    switch($soap['faultCode']){
+                        case '100':
+                            throw new \UnexpectedValueException('Requested store view not found.');
+                            break;
+                        case '101':
+                            throw new \UnexpectedValueException('Product does not exist');
+                            break;
+                        case '102':
+                            throw new \UnexpectedValueException('Invalid data given. Details in error message.');
+                            break;
+                    }
 
-            foreach($response as $soapResponse){
-                if( preg_match('/Product/', $soapResponse)){
-                    $res = $soapResponse;
-                }
+//                if( preg_match('/Product/', $soapResponse)){
+//                    $res = $soapResponse;
+//                }
 //            SQLSTATE[40001]: Serialization failure: 1213 Deadlock found when trying to get lock; try restarting transaction
 //            I suppose this happens when there is too much traffic. I think once content team moves over to zend it will not deadlock anymore.
-                if( preg_match('/Serialization failure/',$soapResponse )){
-                    $res = $soapResponse ;
-                }
-                if(true === $soapResponse){
-                    $res = $soapResponse;
+//                if( preg_match('/Serialization failure/',$soapResponse )){
+//                    $res = $soapResponse ;
+//                }
+                    if(true === $soap){
+                        $res = $soap;
+                    }
+
                 }
             }
-
             if($res === true || (!is_null($categorySoapResponse) &&  $categorySoapResponse === true) ){
 //                TODO have to find what out what the update statement actually returns.
-                $updateCategories = $this->getMagentoTable()->updateProductCategories($categories);
+//                $updateCategories = $this->getMagentoTable()->updateProductCategories($categories);
                 $updateFields = $this->getMagentoTable()->updateToClean($dirtyData);
                 if($updateFields || $updateCategories){
                     return $this->redirect()->toRoute('apis');

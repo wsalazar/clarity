@@ -8,7 +8,7 @@
 
 namespace Api\Magento\Model;
 
-use Zend\Soap\Client;
+use SoapClient;
 
 class AbstractSoap implements SoapInterface
 {
@@ -19,8 +19,8 @@ class AbstractSoap implements SoapInterface
 
     public function __construct($soapUrl)
     {
-        $this->soapHandle = new Client($soapUrl);
-        $this->session = $this->soapHandle->call('login',array(SOAP_USER, SOAP_USER_PASS));
+        $this->soapHandle = new SoapClient($soapUrl);
+        $this->session = $this->soapHandle->login(SOAP_USER, SOAP_USER_PASS);
     }
 
     public function soapCall($packet)
@@ -31,12 +31,12 @@ class AbstractSoap implements SoapInterface
         while( $a < count($packet) ){
             $x = 0;
             while($x < 10 && $a < count($packet)){
-                $batch[$x] = $packet[$a];
+                $batch[$x] = array(PRODUCT_UPDATE, $packet[$a]);
                 $x++;
                 $a++;
             }
-            sleep(15);
-            $results = $this->soapHandle->call('multiCall', $batch);
+            $results[] = $this->soapHandle->multiCall($this->session, $batch);
+            sleep(2);
         }
         return $results;
     }

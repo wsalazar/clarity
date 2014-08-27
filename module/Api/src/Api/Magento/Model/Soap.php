@@ -22,7 +22,6 @@ class Soap extends AbstractSoap
     public function __construct()
     {
         parent::__construct(SOAP_URL);
-
     }
 
     public function soapMedia($media = array())
@@ -109,37 +108,38 @@ class Soap extends AbstractSoap
 
     public function soapContent($data)
     {
-        $result = false;
-        $soapClient = new SoapClient(SOAP_URL);
-        $session = $soapClient->login(SOAP_USER, SOAP_USER_PASS);
-        $i = 0;
-        $updateBatch = array();
+//        anyType call(string $sessionId, string $resourcePath, anyType $args)
+//        FixedArray multiCall(string $sessionId, FixedArray $calls, anyType $options)
+//echo '<pre>';
+//        $soapClient = new SoapClient(SOAP_URL);
+//        $session = $soapClient->login(SOAP_USER, SOAP_USER_PASS);
+//        var_dump($this->soapHandle->getFunctions());
+        $packet = array();
         foreach($data as $key => $value){
             if( isset($value['id']) ) {
                 $entityID = $value['id'];
                 array_shift($value);
                 $updatedValue = current($value);
-//                    $this->productAttribute();
-//                    $attributeCode = lcfirst(current(array_keys($value)));
                 $attributeCode =  current(array_keys($value));
                 $attributeCode = $attributeCode == 'title' ? 'name' : $attributeCode;
                 $attributeCode = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2',$attributeCode  ));
-                //$updatedKey = $this->lookupAttribute(lcfirst(current(array_keys($value))));
-//                    echo $updatedKey . ' ' ;
-                $updateBatch[$i] = array('entity_id' => $entityID, array($attributeCode => $updatedValue));
-                $i++;
+                $packet[$key] = array('entity_id' => $entityID, array($attributeCode => $updatedValue));
             }
         }
+         return $this->soapCall($packet);
+//                die();
+
         $a = 0;
-        while( $a < count($updateBatch) ){
+        $queueBatch = [];
+        while( $a < count($packet) ){
             $x = 0;
-            while($x < 10 && $a < count($updateBatch)){
-                $queueBatch[$x] = array(PRODUCT_UPDATE, $updateBatch[$a]);
+            while($x < 10 && $a < count($packet)){
+                $queueBatch[$x] = array(PRODUCT_UPDATE, $packet[$a]);
                 $x++;
                 $a++;
             }
             sleep(15);
-            $result = $soapClient->multiCall($session, $queueBatch);
+            $result[] = $soapClient->multiCall($session, $queueBatch);
         }
         return $result;
     }
