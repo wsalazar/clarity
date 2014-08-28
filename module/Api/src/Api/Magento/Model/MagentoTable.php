@@ -101,9 +101,9 @@ class MagentoTable {
     {
 //        public function productAttribute(Sql $sql, array $columns = array(), array $where = array(),  $tableType )
 //        $where = new Where();
-        $where = array('left'=>'dataState', 'right'=>0);
-        $filter = new Where;
-        return $this->productAttribute($this->sql, array(), $where, 'images', $filter)->count();
+//        $where = array('left'=>'dataState', 'right'=>0);
+//        $filter = new Where;
+        return $this->productAttribute($this->sql, array(), ['dataState'=>2], 'images' )->count();
     }
 
     public function lookupDirt()
