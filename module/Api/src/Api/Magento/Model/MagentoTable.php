@@ -245,11 +245,11 @@ class MagentoTable {
                     $attributeField = current(array_keys($data[$key]));
                     $attributeField = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2',$attributeField  ));
 
-                    $columns = array('attributeId' => 'attribute_id', 'backendType' => 'backend_type');
+//                    $columns = array('attributeId' => 'attribute_id', 'backendType' => 'backend_type');
                     $where = array('attribute_code' => ($attributeField == 'title') ? 'name' : $attributeField);
-                    $results = $this->productAttribute($this->sql, $columns, $where, 'lookup');
-                    $attributeId = $results[0]['attributeId'];
-                    $tableType = $results[0]['backendType'];
+                    $results = $this->productAttributeLookup($this->sql, $where);
+                    $attributeId = $results[0]['attId'];
+                    $tableType = $results[0]['dataType'];
                     $set = array('dataState'=>'0');
                     $where = array('entity_id'=>$entityId, 'attribute_id'=>$attributeId);
                     $result = $this->productUpdateaAttributes($this->sql, $tableType, $set, $where);
