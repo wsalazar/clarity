@@ -79,7 +79,7 @@ class MagentoController  extends AbstractActionController
 
         /*Fetch categories*/
         $categories = $this->getMagentoTable()->fetchCategoriesSoap();
-        $relatedProds = $this->getMagentoTable()->fetchRelatedProducts();
+//        $relatedProds = $this->getMagentoTable()->fetchRelatedProducts();
         if(!empty($categories)){
             /*Make api call to delete and update Sku with new category*/
             $categorySoapResponse = $this->getMagentoTable()->soapCategoriesUpdate($categories);
@@ -88,10 +88,10 @@ class MagentoController  extends AbstractActionController
             /*Update Mage with up-to-date products*/
             $response = $this->getMagentoTable()->soapContent($dirtyData);
         }
-        if(!empty($relatedProds)){
+//        if(!empty($relatedProds)){
             /*Update Mage with up-to-date products*/
-            $response = $this->getMagentoTable()->soapRelatedProducts($relatedProds);
-        }
+//            $relatedProdsResponse = $this->getMagentoTable()->soapRelatedProducts($relatedProds);
+//        }
 
         if( $categorySoapResponse || $response){
 
@@ -166,11 +166,13 @@ class MagentoController  extends AbstractActionController
             return $this->redirect()->toRoute('auth', array('action'=>'index') );
         }
         $images = $this->getMagentoTable()->fetchImages();
+
         if($this->getMagentoTable()->soapMedia($images)) {
             if($this->getMagentoTable()->updateImagesToClean()){
-                return $this->redirect()->toRoute('apis', array('action'=>'magento'));
+                return $this->redirect()->toRoute('apis');
             }
         }
+
     }
 
     public function getMagentoTable()

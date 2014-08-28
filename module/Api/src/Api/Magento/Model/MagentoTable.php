@@ -104,9 +104,9 @@ class MagentoTable {
     {
 //        public function productAttribute(Sql $sql, array $columns = array(), array $where = array(),  $tableType )
 //        $where = new Where();
-        $where = array('left'=>'dataState', 'right'=>0);
-        $filter = new Where;
-        return $this->productAttribute($this->sql, array(), $where, 'images', $filter)->count();
+//        $where = array('left'=>'dataState', 'right'=>2);
+//        $filter = new Where;
+        return $this->productAttribute($this->sql, array(), ['dataState'=>2], 'images')->count();
     }
 
     public function lookupDirt()
@@ -408,16 +408,16 @@ class MagentoTable {
 
     public function soapMedia($media = array())
     {
-        $imageBatch = array();
+        $imageBatch = $packet = array();
         if(!is_array($media)) {
             throw new \InvalidArgumentException(
                 sprintf("Bad argument in class %s for function %s in line %s.",__CLASS__, __FUNCTION__, __LINE__)
             );
         }
 //            $options = array('login'=>SOAP_USER, 'password'=>SOAP_USER_PASS);
-        $soapHandle = new Client(SOAP_URL);
+        $soapHandle = new SoapClient(SOAP_URL);
 //            if $options does not work for logging in then try the following.
-        $session = $soapHandle->call('login',array(SOAP_USER, SOAP_USER_PASS));
+        $session = $soapHandle->login(SOAP_USER, SOAP_USER_PASS);
         foreach($media as $key => $imgFileName) {
 //                $imgDomain = $media[$key]['domain'];//this will change to whatever cdn we will have.
             $imgName = $media[$key]['filename'];
@@ -458,7 +458,7 @@ class MagentoTable {
             }
             $products = $resultSet->toArray();
             $sku = $products[0]['sku'];
-            $packet = array(
+            $packet[$key] = array(
                 $sku,
                 array(
                     'file'  =>  $fileContents,
@@ -470,8 +470,25 @@ class MagentoTable {
                     'disabled'  =>  0,
                 )
             );
-            $batch = array($session, PRODUCT_ADD_MEDIA, $packet);
-            $results[] = $soapHandle->call('call', $batch);
+//            $batch = array($session, PRODUCT_ADD_MEDIA, $packet);
+//            $results[] = $soapHandle->call('call', $batch);
+        }
+
+
+        $count = 0;
+        $batch = [];
+        while($count < count($packet)) {
+            $packetCount = 0;
+            while($packetCount < 10 && $count < count($packet)){
+                $batch[$packetCount] = $packet[$count];
+                $packetCount++;
+                $count++;
+            }
+//            echo '<pre>';
+//            var_dump($batch);
+//            die();
+            $results[] = $soapHandle->multiCall($session, PRODUCT_ADD_MEDIA, $batch);
+            sleep(2);
         }
         return $results;
     }
@@ -515,21 +532,35 @@ class MagentoTable {
                 $packet[$key] = array($session, PRODUCT_ASSIGN_CATEGORY, array('categoryId'=>$categortyId,'product'=>$entityId ));
             }
         }
-        foreach($packet as $key => $batch){
+        $count = 0;
+        $batch = [];
+        while($count < count($packet)){
+            $packetCount = 0;
+            while($packetCount < 10 && $count < count($packet)){
+                $batch[$packetCount] = $packet[$count];
+                $packetCount++;
+                $count++;
+            }
+            $results = $soapHandle->call('multiCall', $batch );
+            sleep(2);
+        }
+//        Old code
+//        foreach($packet as $key => $batch){
 //         echo '<pre>';
 //            var_dump($batch);
-            $results = $soapHandle->call('call', $batch );
-        }
+//            $results = $soapHandle->call('call', $batch );
+//        }
 //        die();
         return $results;
     }
 
     public function soapContent($data)
     {
-        $soapClient = new SoapClient(SOAP_URL);
-        $session = $soapClient->login(SOAP_USER, SOAP_USER_PASS);
+        $soapClient = new Client(SOAP_URL);
+        $session = $soapClient->call('login',array(SOAP_USER, SOAP_USER_PASS));
         $i = 0;
-        $updateBatch = array();
+        $packet = array();
+        $result = false;
         foreach($data as $key => $value){
             if( isset($value['id']) ) {
                 $entityID = $value['id'];
@@ -542,20 +573,21 @@ class MagentoTable {
                 $attributeCode = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2',$attributeCode  ));
                 //$updatedKey = $this->lookupAttribute(lcfirst(current(array_keys($value))));
 //                    echo $updatedKey . ' ' ;
-                $updateBatch[$i] = array('entity_id' => $entityID, array($attributeCode => $updatedValue));
+                $packet[$key] = array($session, PRODUCT_UPDATE, array('entity_id' => $entityID, array($attributeCode => $updatedValue)));
                 $i++;
             }
         }
         $a = 0;
-        while( $a < count($updateBatch) ){
+        $batch= [];
+        while( $a < count($packet) ){
             $x = 0;
-            while($x < 10 && $a < count($updateBatch)){
-                $queueBatch[$x] = array(PRODUCT_UPDATE, $updateBatch[$a]);
+            while($x < 10 && $a < count($packet)){
+                $batch[$x] = $packet[$a];
                 $x++;
                 $a++;
             }
             sleep(15);
-            $result = $soapClient->multiCall($session, $queueBatch);
+            $result[] = $soapClient->call('call',$batch);
         }
         return $result;
     }
