@@ -9,7 +9,7 @@ var UITree = function () {
                 //console.log(data);
 
                 $('#cattree').jstree({
-                    'plugins': ["wholerow", "checkbox", "types"],
+                    'plugins': ["checkbox", "types"],
                     'core': {
                         "themes" : {
                             "responsive": false
@@ -63,6 +63,7 @@ var UITree = function () {
             else
                 return family;
          }
+
         $('#cattree').on('changed.jstree', function (e, data) {
             var wtf = data.selected.toString();
             var family = data.selected.toString();
@@ -70,8 +71,6 @@ var UITree = function () {
 
             for (var i = 0; i < wtf.length; i++) {
                 getparent(wtf[i]);
-
-
             }
 //get entityid
           //  var entityid = $("input[name*='man']");
