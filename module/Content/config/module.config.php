@@ -211,6 +211,11 @@ return array(
                                                  'Content\AjaxLoader\Controller\AttributesAjax'   => 'Content\AjaxLoader\Controller\AttributesAjaxController',
                                                 )
     ),
+    'service_manager' => array(
+        'factories' => array(
+            'Navigation' => 'Zend\Navigation\Service\DefaultNavigationFactory',
+        ),
+    ),
     'event_listener_construct' =>  array(
         'logger'  =>  array(
             'extra'    =>  array(

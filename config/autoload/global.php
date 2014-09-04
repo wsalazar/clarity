@@ -19,32 +19,39 @@ return array(
             array(
                 'label' => 'Dashboard',
                 'route' => 'home',
+                'resource' => 'home',
             ),
             array(
                 'label' => 'Manage Content',
                 'route' => 'home',
+                'resource' => 'home',
                 'pages' => array(
                     array(
                         'label' => 'Search',
                         'route' => 'search',
+                        'resource' => 'search',
                     ),
                     array(
                         'label' => 'Attribute Management',
                         'route' => 'manageattributes',
+                        'resource' => 'manageattributes',
                     ),
                     array(
                         'label' => 'Website Assignment',
                         'route' => 'webassignment',
+                        'resource' => 'webassignment',
                     ),
                 ),
             ),
             array(
                 'label' => 'API Calls',
                 'route' => 'apis',
+                'resource' => 'apis',
             ),
             array(
                 'label' => 'History',
                 'route' => 'logging',
+                'resource' => 'logging',
             ),
               
              
@@ -52,7 +59,7 @@ return array(
     ),
     'service_manager' => array(
         'factories' => array(
-            'navigation' => 'Zend\Navigation\Service\DefaultNavigationFactory',
+//            'navigation' => 'Zend\Navigation\Service\DefaultNavigationFactory',
             'Zend\Db\Adapter\Adapter' =>'Zend\Db\Adapter\AdapterServiceFactory',
             'sessionService'    =>  function (ServiceLocatorInterface $serviceLocator){
                     $sessionNames  =  array(

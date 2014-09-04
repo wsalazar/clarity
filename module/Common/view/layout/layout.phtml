@@ -274,6 +274,8 @@
         use Zend\Session\Container;
         $loginSession= new Container('login');
         $userData = $loginSession->sessionDataforUser;
+        echo $userData['role'];
+        $this->navigation('Navigation')->setAcl($this->acl)->setRole($userData['role']);
         ?>
         <span class="username"><?=$userData['firstname'] . ' ' .$userData['lastname']  ; ?></span>
 
@@ -307,7 +309,7 @@
                 <i class="icon-lock"></i> Lock Screen </a>
         </li>
         <li>
-            <a href="/logout"">
+            <a href="/logout">
             <i class="icon-key"></i> Log Out </a>
         </li>
     </ul>

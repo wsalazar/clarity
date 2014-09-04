@@ -52,26 +52,26 @@ var UITree = function () {
                 }
             });
         });
+        //handle checks
+        function getparent(kid) {
+             var family = '';
 
-
-//handle checks
+             if ($('#cattree').jstree('get_parent', kid) && $('#cattree').jstree('get_parent', kid) != "#" && family.indexOf($('#cattree').jstree('get_parent', kid)) == '-1') {
+                family = family + ',' + $('#cattree').jstree('get_parent', kid);
+                getparent($('#cattree').jstree('get_parent', kid));
+            }
+            else
+                return family;
+         }
         $('#cattree').on('changed.jstree', function (e, data) {
             var wtf = data.selected.toString();
             var family = data.selected.toString();
             wtf = wtf.split(",");
 
-            for (i = 0; i < wtf.length; i++) {
+            for (var i = 0; i < wtf.length; i++) {
                 getparent(wtf[i]);
 
-                function getparent (kid) {
-                    if ($('#cattree').jstree('get_parent', kid) && $('#cattree').jstree('get_parent', kid) != "#" && family.indexOf($('#cattree').jstree('get_parent', kid)) == '-1') {
 
-                        family += ',' + $('#cattree').jstree('get_parent', kid);
-                        getparent($('#cattree').jstree('get_parent', kid));
-                    }
-                    else
-                        return family;
-                }
             }
 //get entityid
           //  var entityid = $("input[name*='man']");
