@@ -26,12 +26,12 @@ class IndexController extends AbstractActionController
         $this->layout('layout/layout');
 //        return $this->redirect()->toRoute('home');
         return new ViewModel(
-            array(
-                'firstName' =>  $userLogin['firstname'],
-                'lastName'  =>  $userLogin['lastname'],
-                'username'  =>  $userLogin['username'],
-                'role'  =>  $userLogin['role'],
-            )
+//            array(
+//                'firstName' =>  $userLogin['firstname'],
+//                'lastName'  =>  $userLogin['lastname'],
+//                'username'  =>  $userLogin['username'],
+//                'role'  =>  $userLogin['role'],
+//            )
         );
     }
 

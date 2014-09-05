@@ -84,7 +84,6 @@ echo '<ul class="page-sidebar-menu" data-auto-scroll="true" data-slide-speed="20
 
 foreach ($this->container as $page){
     $hasChildren = $page->hasPages();
-
     if(!$hasChildren){
         $page->isActive() ? $active = 'start active' : $active = '';
         $page->isActive() ? $selected = 'selected' : $selected = 'arrow';

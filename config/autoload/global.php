@@ -59,7 +59,7 @@ return array(
     ),
     'service_manager' => array(
         'factories' => array(
-//            'navigation' => 'Zend\Navigation\Service\DefaultNavigationFactory',
+            'navigation' => 'Zend\Navigation\Service\DefaultNavigationFactory',
             'Zend\Db\Adapter\Adapter' =>'Zend\Db\Adapter\AdapterServiceFactory',
             'sessionService'    =>  function (ServiceLocatorInterface $serviceLocator){
                     $sessionNames  =  array(
