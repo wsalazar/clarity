@@ -58,6 +58,11 @@ echo get_class($e->getApplication());
                 'navigation'    =>  function(HelperPluginManager $pm){
                         $e = new MvcEvent();
                         $sm = $pm->getServiceLocator();
+                        $config = $sm->get('Config');
+//                        echo '<pre>';
+//                        var_dump($config['router']);
+//                        var_dump($config);
+//                        die();
                         $adapter = $sm->get('Zend\Db\Adapter\Adapter');
                         $sql = new Sql($adapter);
                         $select = $sql->select()->from('useraccess');
@@ -94,12 +99,15 @@ echo get_class($e->getApplication());
                                 }
                             }
                             if( $permission ) {
+//                                echo 'allow ' . $role . ' ' . $resource."\n";
                                 $acl->allow($role, $resource);
                             } else {
+//                                echo 'deny ' . $role . ' ' . $resource."\n";
                                 $acl->deny($role, $resource);
                             }
 
                         }
+//                        die();
                         $auth = $sm->get('Zend\Authentication\AuthenticationService');
                         $role = '';
                         if ($auth->hasIdentity()) {
