@@ -13,6 +13,7 @@ use Zend\Stdlib\Hydrator\ClassMethods as cHydrator;
 use Zend\View\Model\ViewModel;
 use Content\ContentForm\Entity\Products;
 use Zend\Session\Container;
+use FileParser\File\Model\CSV;
 
 
 /**
@@ -35,6 +36,26 @@ class ProductsController extends AbstractActionController {
             return $this->redirect()->toRoute('auth', array('action'=>'index') );
         }
 
+        $file = new CSV(__DIR__.'/../../../../../../missing_names.csv');
+        $fields = $file->populate(['sku','name']);
+        echo '<pre>';
+        var_dump($fields);
+        $conn = mysqli_connect(HOST, USER, PASS, DB);
+
+        foreach ($fields as $key => $sku) {
+            $select = "select entity_id from spex.product where productid = '". $sku['sku']."'";
+            $lid = mysqli_query($conn,$select);
+            $entityId = mysqli_fetch_row($lid);
+//            var_dump($entityId);
+            echo $sku['sku'] . ' ' . $entityId[0] . ' ' . $sku['name'] . "<br />";
+
+            $insert = "INSERT INTO productattribute_varchar (entity_id, attribute_id, value, dataState, lastModifiedDate, changedby)
+            values(" . $entityId[0] . ", 96,'" . $sku['name']. "',0,'" .  date('Y-m-d h:i:s') ."', 27)";
+            if( !mysqli_query($conn,$insert) ){
+                die(mysqli_error($conn));
+            }
+        }
+die();
         $queriedData = new Products();
         $sku = $this->params()->fromRoute('sku');
         $form = $this->getFormTable();
