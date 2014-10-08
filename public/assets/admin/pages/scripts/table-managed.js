@@ -1723,7 +1723,7 @@ var TableManaged = function () {
             "columns": [
                 {
                     "orderable":    false,
-//                    "class":          'details-control',
+                    "class":          'details-control',
                     "data": null,
                     "defaultContent":   "<td id='sku_new_prod'>"+
                                             "<label for='skuNewProduct'></label>"+
@@ -1739,31 +1739,31 @@ var TableManaged = function () {
                     "class": "eid",
                     "data": "id"
                 },
-//                {
-//                    "class": "hidden website",
-//                    "data": "website"
-//                },
+                {
+                    "class": "hidden website",
+                    "data": "website"
+                },
 
                 {
                     "class": "sku",
                     "data": "sku"
                 },
-//                {
-//                    "class": "property hidden",
-//                    "data": function(data){
-//                        if (typeof data == 'object') {
-//                            if( typeof data.property == 'object' ) {
-//                                return data.property.stock_data;
-//                            } else {
-//                                return data.property;
-//                            }
-//                        }
-//                    }
-//                },
-//                {
-//                    "class": "value hidden",
-//                    "data": "value"
-//                },
+                {
+                    "class": "property hidden",
+                    "data": function(data){
+                        if (typeof data == 'object') {
+                            if( typeof data.property == 'object' ) {
+                                return data.property.stock_data;
+                            } else {
+                                return data.property;
+                            }
+                        }
+                    }
+                },
+                {
+                    "class": "value hidden",
+                    "data": "value"
+                },
                 { "data": "creation"},
                 { "data": "fullname"}
 
@@ -1793,24 +1793,59 @@ var TableManaged = function () {
                     "first": "First"
                 }
             }});
-//        $('#kpiNewProducts tbody').on('click', 'td.details-control', function () {
-//           var tr = $(this).closest('tr');
-//            var row = dtable.api().row( tr );
+
+        var hideRow = dtable.api().row( $('#kpiNewProducts tbody td.details-control').closest('tr') );
+        if ( typeof hideRow.data() == 'undefined' ) {
+            hideRow.child.hide();
+        }
+
+        $('#kpiNewProducts tbody').on('click', 'td.details-control', function () {
+           var tr = $(this).closest('tr');
+            var row = dtable.api().row( tr );
 //
-//            if ( row.child.isShown() ) {
+            if ( typeof row.data().sku == 'undefined' ) {
+                tr.hide();
+            }
+            if ( row.child.isShown() ) {
 //                // This row is already open - close it
 //                console.log('hoho');
-//                row.child.hide();
+                row.child.hide();
 //                tr.removeClass('shown');
-//            }
-//            else {
+            }
+            else {
 //                console.log('haha');
 //                // Open this row
-////                row.child( format(row.data()) ).show();
+//                row.child( format(row.data()) ).show();
+                row.child( displayData(row.data()) ).show();
 //                row.child().show();
-//                tr.addClass('shown');
-//            }
-//        } );
+                tr.addClass('shown');
+            }
+        } );
+
+        function displayData(data)
+        {
+            var website = null;
+            if (data.website == 0 ) {
+                website = 'Focus Camera/Asavings';
+            } else if ( data.website == 1 ) {
+                website = 'Focus Camera';
+            } else {
+                website = 'Asavings';
+            }
+
+            console.log(data.property);
+            console.log(data.value);
+
+            return '<tr>'+
+                '<td>Website</td>'+
+                '<td>'+website+'</td>'+
+                '</tr>'+
+                '<tr>'+
+                '<td>Sku:</td>'+
+                '<td>'+data.sku+'</td>'+
+                '</tr>';
+        }
+
         var groupNewSku = $('#skuNewProducts');
 
         $('#kpiNewProducts tbody').on('change', '#skuNewProduct',function (e) {
@@ -1862,7 +1897,6 @@ var TableManaged = function () {
         });
         groupNewSku.prop('checked',false);
         groupNewSku.on('change',function(){
-//            console.log('haha');
             $('form#mageNewProds button').append('<div class="skunewprods"></div>');
             if( $(this).prop("checked") ) {
                 $('.skuNewProduct').prop('checked',true);

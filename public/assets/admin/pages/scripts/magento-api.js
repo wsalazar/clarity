@@ -5,10 +5,8 @@ var magentoItems = $('.magento-updates');
 var magentoImages = $('.magento-images');
 var magentoNewItems = $('.magento-new-items');
 var soapUpdates = $('#soapUpdates');
-var kpiUpdates = $('#kpiUpdates');
 var soapImages = $('#soapImages');
 var soapNewProducts = $('#soapNewProducts');
-var kpiImages = $('#kpiImages');
 magentoItems.hide();
 magentoImages.hide();
 magentoNewItems.hide();
@@ -76,8 +74,6 @@ $('tr #sku_item').on('change', '#skuItem' ,function(){
         $('.show-updates').on('click',function(e){
             e.preventDefault();
             magentoItems.show();
-//            kpiUpdates.show();
-//            kpiImages.hide();
             soapImages.hide();
             soapNewProducts.hide();
             soapUpdates.show();
@@ -87,8 +83,6 @@ $('tr #sku_item').on('change', '#skuItem' ,function(){
         $('.show-images').on('click',function(e){
             e.preventDefault();
             magentoItems.hide();
-//            kpiUpdates.hide();
-//            kpiImages.show();
             soapImages.show();
             soapUpdates.hide();
             soapNewProducts.hide();
@@ -98,8 +92,6 @@ $('tr #sku_item').on('change', '#skuItem' ,function(){
         $('.new-items').on('click',function(e){
             e.preventDefault();
             magentoItems.hide();
-            kpiUpdates.hide();
-            kpiImages.hide();
             magentoImages.hide();
             magentoNewItems.show();
             soapImages.hide();

@@ -564,7 +564,53 @@ class MagentoTable {
             $soapBundle[$startCount]['id'] = (int)$product['id'];
             $soapBundle[$startCount]['creation'] = date('m-d-Y',strtotime($product['creation']));
             $soapBundle[$startCount]['fullname'] = $product['fname'] . ' ' . $product['lname'];
-                    $startCount++;
+            $entityId = $product['id'];
+            $attributes = $this->productAttributeLookup($this->sql);
+                foreach( $attributes as $attribute ) {
+                    $tableType = (string)$attribute['dataType'];
+                    $attributeId = (int)$attribute['attId'];
+                    $attributeCode = $attribute['attCode'];
+                    $selectAtts = $this->sql->select()->from('productattribute_'. $tableType)
+                                                      ->columns([$attributeCode=>'value', 'attId'=>'attribute_id']);
+                    $filterAttributes = new Where;
+                    $filterAttributes->equalTo('productattribute_'.$tableType.'.entity_id',$entityId);
+                    $filterAttributes->equalTo('productattribute_'.$tableType.'.attribute_id',$attributeId);
+                    $filterAttributes->in('productattribute_'.$tableType.'.dataState',array(2));
+                    $selectAtts->where($filterAttributes);
+                    $attStatement = $this->sql->prepareStatementForSqlObject($selectAtts);
+                    $attResult = $attStatement->execute();
+                    $attSet = new ResultSet;
+                    if ($attResult instanceof ResultInterface && $attResult->isQueryResult()) {
+                        $attSet->initialize($attResult);
+                    }
+                    $attributeValues = $attSet->toArray();
+
+                    foreach($attributeValues as $keyValue => $valueOption) {
+                        $soapBundle[$startCount]['website'] = $product['website'];
+                        if ( array_key_exists($attributeCode,$this->stockData) ) {
+                            $soapBundle[$startCount]['property'] = ['stock_data'=>ucfirst(str_replace('_', ' ' ,$attributeCode))] ;
+                            $soapBundle[$startCount]['value'] = $valueOption[$attributeCode];
+                        } else {
+                            if( isset($valueOption[$attributeCode]) ){
+                                $soapBundle[$startCount]['property'] = ucfirst(str_replace('_', ' ' ,$attributeCode));
+                                $soapBundle[$startCount]['value'] = $valueOption[$attributeCode];
+                                if( $attributeCode == 'status' && $valueOption[$attributeCode] == 2 ) {
+                                    $soapBundle[$startCount]['value'] = 'Disabled';
+                                }
+                                if( $attributeCode == 'status' && $valueOption[$attributeCode] == 1 ) {
+                                    $soapBundle[$startCount]['value'] = 'Enabled';
+                                }
+                            }
+                            if( is_null($valueOption[$attributeCode]) && $attributeCode == 'status') {
+                                $soapBundle[$startCount]['property'] = ucfirst(str_replace('_', ' ' ,$attributeCode));;
+                                $soapBundle[$startCount]['value'] = '2';
+                            }
+                        }
+//
+            $startCount++;
+                    }
+
+                }
         }
 //        echo '<pre>';
 //        var_dump($soapBundle);
