@@ -253,15 +253,18 @@ class MagentoTable {
 //            $resultSet->initialize($result);
 //        }
 //        $products = $resultSet->toArray();
+//        $this->selectAttribute();
         $results = $this->productAttributeLookup($this->sql);
         $soapCount = 0;
-//        foreach( $products as $product ) {
+        $attribute = $productAttributes = [];
             foreach( $results as $attributes ) {
-                $dataType = $attributes['dataType'];
-                $attributeId = $attributes['attId'];
-                $attributeCode = $attributes['attCode'];
-                    if ( $attributeCode != 'qty' ) {
-                        $selectAttribute = $this->sql->select()
+                    $dataType = $attributes['dataType'];
+                    $attributeId = $attributes['attId'];
+                    $attributeCode = $attributes['attCode'];
+                if ( $attributeCode != 'qty' ) {
+                    $attribute[$soapCount] = $attributeCode;
+                    $soapCount++;
+                    $selectAttribute = $this->sql->select()
                                                      ->from('productattribute_'.$dataType)
     //                                                 ->where(['attribute_id'=>$attributeId,/*'entity_id'=>$product['id'], */'productattribute_'.$dataType.'.dataState'=>1])
                                                      ->columns(['id'=>'entity_id', $attributeCode=>'value', 'ldate'=>'lastModifiedDate']);
@@ -271,9 +274,9 @@ class MagentoTable {
                         $filter->equalTo('productattribute_'.$dataType.'.attribute_id',$attributeId);
                         $filter->equalTo('productattribute_'.$dataType.'.dataState',1);
 
-//                      If user didn't submit a sku then don't check for skus.
+    //                      If user didn't submit a sku or product name then don't check for skus.
                         if ( $sku ) {
-//                            Makes sure that Sku exists
+    //                            Makes sure that Sku exists
                             if( !( $productsTable->validateSku( $sku ) ) ) {
                                 $filter->like('p.productid', $sku.'%');
                                 $filter->orPredicate(new Predicate\Like('productattribute_'.$dataType.'.value','%'.$sku.'%'));
@@ -282,38 +285,45 @@ class MagentoTable {
                             }
                         }
                         $selectAttribute->where($filter);
-                        $selectAttribute->order('productattribute_'.$dataType.'.lastModifiedDate ASC');
-                        $selectAttribute->limit($limit);
+                        $selectAttribute->order('productattribute_'.$dataType.'.lastModifiedDate DESC');
+    //                        $selectAttribute->limit($limit);
                         $attStmt = $this->sql->prepareStatementForSqlObject($selectAttribute);
                         $attResult = $attStmt->execute();
                         $attSet = new ResultSet;
                         if ($attResult instanceof ResultInterface && $attResult->isQueryResult()) {
                             $attSet->initialize($attResult);
                         }
-//                        echo $selectAttribute->getSqlString(new \Pdo($this->adapter));
-                        $productAttributes = $attSet->toArray();
-                        if(!empty($productAttributes )) {
-//                            for ( $i = 0; $i < $limit; $i++ ) {
-                                foreach ( $productAttributes as $prdAtts ) {
-    //                                if ( $attributeCode == 'qty' ) {
-    //                                    continue;
-    //                                } else {
-                                    $soapBundle[$soapCount]['id'] = $prdAtts['id'];
-                                    $soapBundle[$soapCount]['item'] = $prdAtts['item'];
-                                    $soapBundle[$soapCount]['oproperty'] = $attributeCode;
-                                    $property = preg_match('(_)',$attributeCode) ? str_replace('_',' ',$attributeCode) : $attributeCode;
-                                    $soapBundle[$soapCount]['property'] = ucfirst($property);
-                                    $soapBundle[$soapCount]['newValue'] = strip_tags($prdAtts[$attributeCode]);
-                                    $soapBundle[$soapCount]['ldate'] = date('m-d-Y H:i:s',strtotime( $prdAtts['ldate'] ) );
-                                    $soapBundle[$soapCount]['fullName'] = $prdAtts['fName']. ' ' . $prdAtts['lName'];
-    //                                }
-                                    $soapCount++;
-                                }       // End of foreach
-//                            }   //      End of for loop
-                        }       //  End of if
+    //                        echo $selectAttribute->getSqlString(new \Pdo($this->adapter));
+                        $productAttributes[] = $attSet->toArray();
                     }       //  End of if
             }       //End of foreach
-//        }
+//        echo '<pre>';
+//        var_dump($productAttributes);
+//        var_dump($attribute);
+
+        $soapCount = 0;
+
+            if( !empty($productAttributes) ) {
+                if( $soapCount < $limit ) {
+                    foreach ( $productAttributes as $index => $prdAtts ) {
+                    foreach ($prdAtts as $atts ){
+//                        var_dump($key );
+//                    if(!empty())
+//                    var_dump($prdAtts);
+//                    echo $attribute[$soapCount]. "<br />" ;
+                    $soapBundle[$soapCount]['id'] = $atts['id'];
+                    $soapBundle[$soapCount]['item'] = $atts['item'];
+                    $soapBundle[$soapCount]['oproperty'] = $attribute[$index];
+                    $property = preg_match('(_)',$attribute[$index]) ? str_replace('_',' ',$attribute[$index]) : $attribute[$index];
+                    $soapBundle[$soapCount]['property'] = ucfirst($property);
+                    $soapBundle[$soapCount]['newValue'] = $atts[$attribute[$index]];
+                    $soapBundle[$soapCount]['ldate'] = date('m-d-Y H:i:s',strtotime( $atts['ldate'] ) );
+                    $soapBundle[$soapCount]['fullName'] = $atts['fName']. ' ' . $atts['lName'];
+                        $soapCount++;
+                    }
+                }       // End of foreach
+            }       //  End of if
+        } //    End of if
 //        var_dump($soapBundle);
 //        die();
         return $soapBundle;
