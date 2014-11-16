@@ -63,6 +63,10 @@ $('tr #sku_item').on('change', '#skuItem' ,function(){
             e.preventDefault();
             soapUpdates.show();     //displays datatable
             magentoItems.show();    //displays button
+            $.post('/api-feeds/mage-update-count', function(data){
+                var count = jQuery.parseJSON(data);
+                $('div#mage-update').empty().append(count.updateCount);
+            });
             var updateItems = $('#kpiUpdates').DataTable();
             updateItems.draw();
             var updateCategories = $('#kpiCategories').DataTable();
@@ -80,8 +84,12 @@ $('tr #sku_item').on('change', '#skuItem' ,function(){
             magentoImages.show();   //displays button to new images.
             soapImages.show();      //displays datatable to new images.
             TableManaged.datatableImageChecked();
-//            var newImages = $('#kpiImages').DataTable();
-//            newImages.draw();
+            var newImages = $('#kpiImages').DataTable();
+            newImages.draw();
+            $.post('/api-feeds/mage-new-image-count', function(data){
+                var count = jQuery.parseJSON(data);
+                $('div#mage-image').empty().append(count.imageCount);
+            });
             soapUpdates.hide();     //hides datatable to updated items.
             magentoItems.hide();    //hides button to updated items.
             soapNewProducts.hide(); //hides datatable to new items.
@@ -92,8 +100,12 @@ $('tr #sku_item').on('change', '#skuItem' ,function(){
             magentoNewItems.show(); //displays button to new items.
             soapNewProducts.show(); //displays datatable to new items.
             TableManaged.datatableNewProductChecked();
-//            var newProducts = $('#kpiNewProducts').dataTable();
-//            newProducts.api().draw();
+            var newProducts = $('#kpiNewProducts').dataTable();
+            newProducts.api().draw();
+            $.post('/api-feeds/mage-new-product-count', function(data){
+                var count = jQuery.parseJSON(data);
+                $('div#mage-new-products').empty().append(count.newProdCount);
+            });
             magentoItems.hide();    //hides button to updated items.
             magentoImages.hide();   //hides button to new images.
             soapImages.hide();      //hides datatable to new images.

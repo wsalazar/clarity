@@ -62,6 +62,7 @@ class ConsoleMagentoTable
     {
         $count = 0;
         $changedAttributes = $changedValue = $changedID = $changedSkus = $grouped = [];
+//        var_dump($products);      here is fine.
         foreach ( $products as $product ) {
             $changedID[$count] = $product['id'];
             $changedSkus[$count] = $product['sku'];
@@ -76,19 +77,20 @@ class ConsoleMagentoTable
         }
         $uniqueIds = array_values(array_unique($changedID));
         $count = 0;
+//        var_dump($uniqueIds);
         foreach ($uniqueIds as $key => $uids) {
             $grouped[$key]['id'] = $uids;
             $grouped[$key]['sku'] = $changedSkus[$count];
             foreach ( $changedID as $index => $ids ) {
                 if ( $uids == $ids ) {
-                        $grouped[$count][$changedAttributes[$index]] = $changedValue[$index];
+                        $grouped[$key][$changedAttributes[$index]] = $changedValue[$index];
                     }
 //                $count++;
 
                 }
             $count++;
             }
-//        var_dump($grouped);
+        var_dump($grouped);     //here it screws up.
 //            die();
         return $grouped;
     }
@@ -168,12 +170,12 @@ class ConsoleMagentoTable
         $soapBundle = [];
         $count = 0;
         $select = $this->sql->select()->from('product')->columns([
-            'id'      =>  'entity_id',
+            'id'            =>  'entity_id',
             'sku'           =>  'productid',
             'productType'   =>  'product_type',
             'website'       =>  'website',
             'dateCreated'   =>  'creationdate',
-        ])->where(array('dataState'=>2));
+        ])->where(array('product.dataState'=>2));
         $contentReviewed = new Expression("i.entity_id=product.entity_id and attribute_id = 1676 and value = 1");
         $select->join(['i'=>'productattribute_int'],$contentReviewed,['value'=>'value']);
         $statement = $this->sql->prepareStatementForSqlObject($select);
@@ -182,6 +184,7 @@ class ConsoleMagentoTable
         if ($result instanceof ResultInterface && $result->isQueryResult()) {
             $resultSet->initialize($result);
         }
+//        echo $select->getSqlString(new \Pdo($this->adapter));
         $products = $resultSet->toArray();
         foreach($products as $index => $value){
             $entityId = $value['id'];

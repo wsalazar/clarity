@@ -74,7 +74,7 @@ class MagentoTable {
         if ( $limit ) {
             $select->limit($limit);
         }
-        $filter->equalTo('productattribute_images.dataState',2);
+        $filter->notEqualTo('productattribute_images.dataState',0);
         $select->where($filter);
 
         $statement = $this->sql->prepareStatementForSqlObject($select);
@@ -83,6 +83,7 @@ class MagentoTable {
         if ($result instanceof ResultInterface && $result->isQueryResult()) {
             $resultSet->initialize($result);
         }
+//        echo $select->getSqlString(new \Pdo($this->adapter));
         $images = $resultSet->toArray();
         $soapCount = 0;
         $newImages = [];
@@ -741,6 +742,9 @@ class MagentoTable {
         array_shift($newProducts);
         array_shift($newProducts);
 //        var_dump($newProducts);
+        echo "this is mage entity id " . $mageEntityId . "\n";
+        echo "this is the sku " . $sku . "\n";
+
         $updateProduct = $this->sql->update('product')->set(['entity_id'=>$mageEntityId, 'dataState'=>0 ])->where(['productid'=>$sku]);
         $prdStmt = $this->sql->prepareStatementForSqlObject($updateProduct);
         $response = $prdStmt->execute();

@@ -244,6 +244,11 @@ class MageSoap extends AbstractSoap{
         $attributes = [];
         //var_dump($changedProds);
         foreach( $changedProds as $index => $fields ) {
+
+            if ( $index < 10 ) {
+//                echo $index . ' haha ' ;
+//                var_dump($fields);
+
             $keys = array_keys($fields);
             $skuCollection[] = $sku = $fields['sku'];
             $entityID = $fields['id'];
@@ -251,15 +256,19 @@ class MageSoap extends AbstractSoap{
             array_shift($keys);
             array_shift($fields);
             array_shift($fields);
-            foreach( $keys as $ind => $attFields ) {
-                $attributes[$attFields] = ($attFields == 'website') ? [$changedProds[$index][$attFields]] : $changedProds[$index][$attFields];
+            foreach( $keys as $attFields ) {
+//                $attributes[$attFields] = ($attFields == 'website') ? [$changedProds[$index][$attFields]] : $changedProds[$index][$attFields];
+                $attributes[$attFields] = $changedProds[$index][$attFields];
             }
-            $packet[$index] = array('entity_id' => $entityID, $attributes);
+//                if (!is_null($entityID ) ) {
+                    $packet[$index] = array('entity_id' => $entityID, $attributes);
+//                }
+            }
             $attributes = [];
         }
-//        echo '<pre>';
-//        var_dump($packet);
-//        die();
+        echo '<pre>';
+        var_dump($packet);
+        die();
         return $this->_soapCall($packet, 'catalog_product.update', $skuCollection);
     }
 
@@ -271,21 +280,29 @@ class MageSoap extends AbstractSoap{
         $attributeSet = $this->_getAttributeSet();
         $skuCollection = [];
         $attributes = [];
+//        echo 'hoho';
         foreach( $newProds as $index => $fields ) {
+//            echo 'index ' . $index . "\n" ;
+//            if ( $index < 2 ){
+//            echo $index . ' ' . "\n";
             $keys = array_keys($fields);
             $skuCollection[] = $sku = $fields['sku'];
-//            array_shift($keys);
             array_shift($keys);
             array_shift($keys);
-//            array_shift($fields);
             array_shift($fields);
             array_shift($fields);
             foreach( $keys as $ind => $attFields ) {
-                $attributes[$attFields] = ($attFields == 'website') ? [$newProds[$index][$attFields]] : $newProds[$index][$attFields];
+//                echo 'ind . ' . $ind. "\n";
+//                $attFields = ($attFields == 'website') ? 'websites' : $attFields ;
+                $attributes[$attFields] =$newProds[$index][$attFields];
+//                $attributes[$attFields] = ($attFields == 'websites') ? [$newProds[$index][$attFields]] : $newProds[$index][$attFields];
             }
             $packet[$index] = array('simple', $attributeSet, $sku, $attributes );
+//            var_dump($packet);
+//            }
             $attributes = [];
         }
+//        echo 'haha';
 //        echo '<pre>';
 //    var_dump($packet);
 //        die();

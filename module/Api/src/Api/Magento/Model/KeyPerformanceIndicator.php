@@ -85,12 +85,16 @@ class KeyPerformanceIndicator {
         return $resultSet->count();
     }
 
+
     /**
      * @return int
      */
     public function fetchImageCount()
     {
-        $select = $this->sql->select()->from('productattribute_images')->where(['dataState'=>2]);
+        $select = $this->sql->select()->from('productattribute_images');
+        $filter = new Where;
+        $filter->notEqualTo('dataState',0);
+        $select->where($filter);
         $statement = $this->sql->prepareStatementForSqlObject($select);
         $result = $statement->execute();
         $resultSet = new ResultSet;
