@@ -61,37 +61,49 @@ class ConsoleMagentoTable
     public function groupProducts($products)
     {
         $count = 0;
-        $changedAttributes = $changedValue = $changedID = $changedSkus = $grouped = [];
-//        var_dump($products);      here is fine.
+        $changedAttributes = $changedValue = $changedID = $changedSkus = $grouped = $keys = $changedProduct = [];
+//        var_dump($products);
         foreach ( $products as $product ) {
-            $changedID[$count] = $product['id'];
-            $changedSkus[$count] = $product['sku'];
-            array_shift($product);
-            array_shift($product);
-            $keys = array_keys($product);
-            foreach ( $keys as $attCount => $attribute ) {
-                $changedAttributes[$count] = $attribute;
-                $changedValue[$count] = $product[$attribute];
+            $changedProduct[$count]['id'] = $product['id'];        //  an array with all entity ids cached.
+//            $changedID[$count] = $product['id'];        //  an array with all entity ids cached.
+//            $changedSkus[$count] = $product['sku'];     // array with all skus cached
+            $changedProduct[$count]['sku'] = $product['sku'];     // array with all skus cached
+            array_shift($product);      //  taking index id out.
+            array_shift($product);      //  taking index sku out.
+            $keys = array_keys($product);   //getting all the keys and putting them in an array.
+//            var_dump($keys);
+            $countAtt = 0;
+            foreach ( $keys as $attCount => $attribute ) {  //iterating through the indexed array.
+                $changedProduct[$count][$countAtt][$attribute] = $product[$attribute];
+//                $changedAttributes[$count][$countAtt] = $attribute;        //  caching all the attributes in an array.
+//                $changedValue[$count][$countAtt] = $product[$attribute];   //  caching all the attributes values that are dirty in an array.
+                $countAtt++;
             }
             $count++;
         }
-        $uniqueIds = array_values(array_unique($changedID));
+
+        foreach ( $changedProduct as $ind => $cp ) {
+            if ( $cp == 'id' ) {
+
+            }
+        }
+
+        var_dump($changedProduct);
+//        var_dump($changedAttributes, $changedValue );
+        $uniqueIds = array_values(array_unique($changedID));    //  These are the unique entity ids.
         $count = 0;
-//        var_dump($uniqueIds);
-        foreach ($uniqueIds as $key => $uids) {
-            $grouped[$key]['id'] = $uids;
-            $grouped[$key]['sku'] = $changedSkus[$count];
+        foreach ( $uniqueIds as $key => $uids ) {
             foreach ( $changedID as $index => $ids ) {
                 if ( $uids == $ids ) {
-                        $grouped[$key][$changedAttributes[$index]] = $changedValue[$index];
-                    }
-//                $count++;
-
+                        $grouped[$count]['id'] = $changedID[$index];
+                        $grouped[$count]['sku'] = $changedProduct[$index]['sku'];
+//                        $grouped[$count][$changedAttributes[$index]] = $changedValue[$index];
                 }
             $count++;
             }
-        var_dump($grouped);     //here it screws up.
-//            die();
+        }
+//        var_dump($grouped);     //here it screws up.
+            die();
         return $grouped;
     }
 
