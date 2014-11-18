@@ -245,7 +245,7 @@ class MageSoap extends AbstractSoap{
         //var_dump($changedProds);
         foreach( $changedProds as $index => $fields ) {
 
-            if ( $index < 10 ) {
+//            if ( $index < 10 ) {
 //                echo $index . ' haha ' ;
 //                var_dump($fields);
 
@@ -263,12 +263,12 @@ class MageSoap extends AbstractSoap{
 //                if (!is_null($entityID ) ) {
                     $packet[$index] = array('entity_id' => $entityID, $attributes);
 //                }
-            }
+//            }
             $attributes = [];
         }
-        echo '<pre>';
-        var_dump($packet);
-        die();
+//        echo '<pre>';
+//        var_dump($packet);
+//        die();
         return $this->_soapCall($packet, 'catalog_product.update', $skuCollection);
     }
 

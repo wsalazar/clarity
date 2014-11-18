@@ -62,7 +62,6 @@ class ConsoleMagentoTable
     {
         $count = 0;
         $changedAttributes = $changedValue = $changedID = $changedSkus = $grouped = [];
-//        var_dump($products);      here is fine.
         foreach ( $products as $product ) {
             $changedID[$count] = $product['id'];
             $changedSkus[$count] = $product['sku'];
@@ -77,20 +76,17 @@ class ConsoleMagentoTable
         }
         $uniqueIds = array_values(array_unique($changedID));
         $count = 0;
-//        var_dump($uniqueIds);
         foreach ($uniqueIds as $key => $uids) {
-            $grouped[$key]['id'] = $uids;
-            $grouped[$key]['sku'] = $changedSkus[$count];
             foreach ( $changedID as $index => $ids ) {
                 if ( $uids == $ids ) {
-                        $grouped[$key][$changedAttributes[$index]] = $changedValue[$index];
+                    $grouped[$count]['id'] = $uids;
+                    $grouped[$count]['sku'] = $changedSkus[$index];
+                    $grouped[$count][$changedAttributes[$index]] = $changedValue[$index];
                     }
-//                $count++;
-
                 }
             $count++;
             }
-        var_dump($grouped);     //here it screws up.
+//        var_dump($grouped);     //here it screws up.
 //            die();
         return $grouped;
     }

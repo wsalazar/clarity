@@ -119,7 +119,7 @@ class ConsoleMagentoController  extends AbstractActionController{
         if( !empty($changedProducts) ) {
             $changedProducts = $this->console->groupProducts($changedProducts);
 //            var_dump($changedProducts);
-            die();
+//            die();
 //            foreach( $changedProducts as $key => $prds ) {
 //                echo $key . "\n";
 //                var_dump( $prds );
@@ -187,8 +187,12 @@ class ConsoleMagentoController  extends AbstractActionController{
 //            if($image = $this->getServiceLocator()->get('Api\Magento\Model\MageSoap')->soapMedia($images)) {
                 foreach($image as $key => $img){
                     foreach($img as $ind => $imgName){
-                        if(preg_match('/jpg/',$imgName)){
-                            $result .= $this->mage->updateImagesToClean($newImages[$ind]);
+                        if( preg_match( '/jpg/',$imgName ) ) {
+                            if ( $key === 0 ) {
+                                $result .= $this->mage->updateImagesToClean($newImages[$ind]);
+                            } else {
+                                $result .= $this->mage->updateImagesToClean($newImages[(int)$key.$ind]);
+                            }
                         }
                     }
                 }
