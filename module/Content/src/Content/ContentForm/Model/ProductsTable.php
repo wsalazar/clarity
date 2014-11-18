@@ -10,6 +10,7 @@ use Zend\Session\Container;
 use Zend\Db\Sql\Where;
 use Zend\Db\Sql\Select;
 use Zend\Db\Sql\Expression;
+use Zend\Db\Sql\Predicate;
 use Zend\Db\Sql\Predicate\Operator;
 use Zend\EventManager\EventManagerAwareTrait;
 use Zend\EventManager\EventManager;
@@ -47,7 +48,7 @@ class ProductsTable{
     public function lookupForm($entityid){
         $select = $this->sql->select();
         $select->from('product');
-        $select->columns(array('id' => 'entity_id', 'sku' => 'productid'));
+        $select->columns(array('id' => 'entity_id', 'sku' => 'productid','status' => 'status','price' => 'price','Inventory' => 'quantity'));
 
 
         $select->where(array('product.entity_id' => $entityid));
@@ -70,16 +71,16 @@ class ProductsTable{
         $result[array_keys($newAttibute)[0]] = current($newAttibute);
 
         //Fetch Price
-        $newAttibute = $this->fetchAttribute($entityid,'decimal','99','price');
-        $result[array_keys($newAttibute)[0]] = current($newAttibute);
+//        $newAttibute = $this->fetchAttribute($entityid,'decimal','99','price');
+//        $result[array_keys($newAttibute)[0]] = current($newAttibute);
 
         //Fetch Inventory
-        $newAttibute = $this->fetchAttribute($entityid,'int','1','Inventory');
-        $result[array_keys($newAttibute)[0]] = current($newAttibute);
+//        $newAttibute = $this->fetchAttribute($entityid,'int','1','Inventory');
+//        $result[array_keys($newAttibute)[0]] = current($newAttibute);
 
         //Fetch Status
-        $newAttibute = $this->fetchAttribute($entityid,'int','273','Status');
-        $result[array_keys($newAttibute)[0]] = current($newAttibute);
+//        $newAttibute = $this->fetchAttribute($entityid,'int','273','Status');
+//        $result[array_keys($newAttibute)[0]] = current($newAttibute);
 
         //Fetch Tax Class
         $newAttibute = $this->fetchAttribute($entityid,'int','274','taxclass');
@@ -368,7 +369,6 @@ class ProductsTable{
         $filter->addPredicate($pred);
 
         $select->where($filter);
-        //select->where(array('entity_id' => $entityid, 'link_type_id' =>'1'));
 
         $statement = $this->sql->prepareStatementForSqlObject($select);
         $result = $statement->execute();
@@ -522,16 +522,14 @@ class ProductsTable{
         else {
             $searchTerm = 'product.productid';
         }
+
         $where->like($searchTerm,$searchValue.'%');
+        $where->orPredicate(new Predicate\Like('t.value','%'.$searchValue.'%'));
         if (!(empty($setSkus))){
-            //$select->where("product.entity_id not id ?", $setSkus);
             $where->notIn("product.entity_id", $setSkus);
         }
 
         $select->where($where);
-
-
-
         $select->limit($limit);
 
         $statement = $sql->prepareStatementForSqlObject($select);
@@ -609,16 +607,17 @@ class ProductsTable{
         if(!(is_null($form->getStatus()))) {
             $property = 'status';
             $this->updateAttribute($form->getId(),$form->getStatus(),'273','int');
+            $this->updateStatus($form->getId(),$form->getStatus());
             $this->insertLogging($form->getId(), $oldData->getSku(), $form->getStatus(), $oldData->getStatus(), /*$oldData->getManufacturer(),*/ $property);//,'273','int');
             $updateditems .= 'Status<br>';
         }
 //update special price
-        if(!(is_null($form->getSpecialPrice()))) {
-            $property = 'Special Price';
-            $this->updateAttribute($form->getId(),$form->getSpecialPrice(),'567','decimal');
-            $this->insertLogging($form->getId(), $oldData->getSku(), $form->getSpecialPrice(), $oldData->getSpecialPrice(), $property);
-            $updateditems .= $property.'<br>';
-        }
+//        if(!(is_null($form->getSpecialPrice()))) {
+//            $property = 'Special Price';
+//            $this->updateAttribute($form->getId(),$form->getSpecialPrice(),'567','decimal');
+//            $this->insertLogging($form->getId(), $oldData->getSku(), $form->getSpecialPrice(), $oldData->getSpecialPrice(), $property);
+//            $updateditems .= $property.'<br>';
+//        }
 //update manufacturer
         if(array_key_exists('option',$form->getManufacturer())) {
             $property = 'Manufacturer';
@@ -716,8 +715,9 @@ class ProductsTable{
         if(!(is_null($form->getImageGallery()))) {
             $imageHandler = new ImageTable($this->adapter);
             foreach($form->getImageGallery() as  $value){
-                $result=$imageHandler->updateImage($value);
-                $updateditems .= $result;
+                $imageHandler->updateImage($value);
+                //$updateditems .= $result;
+                //$this->insertLogging($form->getId(), $oldData->getSku(), $form->getAperture()['option'], $oldData->getAperture()['option'], $property);
             }
             if(count($form->getImageGallery())>0){
                 $updateditems .= count($form->getImageGallery()) .' Images Updated';
@@ -773,6 +773,13 @@ class ProductsTable{
             $this->insertLogging($oldData->getId(),$oldData->getSku(), $form->getDescription(), "",$property);
             $inserteditems .= $property.'<br>';
         }
+//Short Description
+        if(!(is_null($form->getShortDescription()))) {
+            $property = 'Short Description';
+            $this->insertAttribute($oldData->getId(),$form->getShortDescription(),'506','text');
+            $this->insertLogging($oldData->getId(),$oldData->getSku(), $form->getShortDescription(), "",$property);
+            $inserteditems .= $property.'<br>';
+        }
 //in box
         if(!(is_null($form->getInBox()))) {
             $property = 'In Box';
@@ -781,12 +788,12 @@ class ProductsTable{
             $inserteditems .= $property.'<br>';
         }
 //Special Price
-        if(!(is_null($form->getSpecialPrice()))) {
-            $property = 'Special Price';
-            $this->insertAttribute($oldData->getId(),$form->getSpecialPrice(),'567','decimal');
-            $this->insertLogging($oldData->getId(),$oldData->getSku(), $form->getSpecialPrice(), "",$property);
-            $inserteditems .= $property.'<br>';
-        }
+//        if(!(is_null($form->getSpecialPrice()))) {
+//            $property = 'Special Price';
+//            $this->insertAttribute($oldData->getId(),$form->getSpecialPrice(),'567','decimal');
+//            $this->insertLogging($oldData->getId(),$oldData->getSku(), $form->getSpecialPrice(), "",$property);
+//            $inserteditems .= $property.'<br>';
+//        }
 //Metakeywords
         if(!(is_null($form->getMetaKeywords()))) {
             $property = 'MetaKeywords';
@@ -941,6 +948,21 @@ class ProductsTable{
         return $inserteditems;
     }
 
+    /**
+     * update status in product table
+     */
+    public function updateStatus($entityid,$value){
+        $loginSession= new Container('login');
+        $userData = $loginSession->sessionDataforUser;
+        $user = $userData['userid'];
+        $update = $this->sql->update('product')
+            ->set(array('status' => $value,'dataState' => '1', 'changedby' => $user, 'lastModifiedDate'=>date('Y-m-d h:i:s')))
+            ->where(array('entity_id ='.$entityid));
+        $statement = $this->sql->prepareStatementForSqlObject($update);
+        return $statement->execute();
+    }
+
+
     public function updateAttribute($entityid,$value,$attributeid,$tableType){
 
         $loginSession= new Container('login');
@@ -1027,7 +1049,7 @@ class ProductsTable{
         return $this->eventManager;
     }
 
-    public function insertLogging($entityid, $sku ,$newValue, $oldValue, /*$manufacturer, */$property)//, $attributeid,$tableType)
+    public function insertLogging($entityid, $sku ,$newValue, $oldValue, $property)
     {
         $loginSession= new Container('login');
         $userData = $loginSession->sessionDataforUser;
@@ -1038,13 +1060,12 @@ class ProductsTable{
             'sku'   =>  $sku,
             'oldvalue'  =>  $oldValue,
             'newvalue'  =>  $newValue,
-//            'manufacturer'  =>  current(array_keys($manufacturer)),
             'datechanged'   => date('Y-m-d h:i:s'),
             'changedby' =>  $user,
             'property'  =>  $property,
         );
 
-        $eventWritables = array('dbAdapter'=> $this->adapter, 'extra'=> $fieldValueMap);//'fields' => $mapping,
+        $eventWritables = array('dbAdapter'=> $this->adapter, 'extra'=> $fieldValueMap);
         $this->getEventManager()->trigger('construct_sku_log', null, array('makeFields'=>$eventWritables));
     }
 }

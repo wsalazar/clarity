@@ -200,7 +200,6 @@ class MagentoController extends AbstractActionController
         }
     }
 
-
     public function updateCategoriesAction()
     {
         $loginSession= new Container('login');
@@ -234,7 +233,6 @@ class MagentoController extends AbstractActionController
             return $response;
         }
     }
-
 
     public function updateRelatedAction()
     {
