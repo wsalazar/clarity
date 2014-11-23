@@ -99,16 +99,6 @@ return array(
                     ),
                 ),
             ),
-//            'category-count'   =>  array(
-//                'type'  =>  'Zend\Mvc\Router\Http\Literal',
-//                'options'   =>  array(
-//                    'route' =>  '/api-feeds/mage-category-count',
-//                    'defaults'  =>  array(
-//                        'controller'    =>  'Api\Magento\Controller\Magento',
-//                        'action'        =>  'kpiCategoryCount',
-//                    ),
-//                ),
-//            ),
             'api-magento-items'   =>  array(
                 'type'  =>  'Zend\Mvc\Router\Http\Literal',
                 'options'   =>  array(
@@ -147,10 +137,7 @@ return array(
                 'soap-products' => array(
                     'options' => array(
                         'route'     =>  'soapProducts',
-//                        'route' => 'soap call <type> product',
-//                        'route' => 'get happen [--verbose|-v] <doname>',
                         'defaults' => array(
-//                            '__NAMESPACE__' => 'Api\Magento\Controller',
                             'controller' => 'Api\Magento\Controller\ConsoleMagento',
                             'action' => 'soapProducts'
                         ),
@@ -160,7 +147,6 @@ return array(
                     'options' => array(
                         'route' => 'soapCreateItems',
                         'defaults' => array(
-//                            '__NAMESPACE__' => 'Api\Magento\Controller',
                             'controller' => 'Api\Magento\Controller\ConsoleMagento',
                             'action' => 'soapCreateProducts'
                         ),
@@ -170,7 +156,6 @@ return array(
                     'options' => array(
                         'route' => 'soapUpdateItems',
                         'defaults' => array(
-//                            '__NAMESPACE__' => 'Api\Magento\Controller',
                             'controller' => 'Api\Magento\Controller\ConsoleMagento',
                             'action' => 'soapUpdateProducts'
                         ),
@@ -180,7 +165,6 @@ return array(
                     'options' => array(
                         'route' => 'soapCreateImages',
                         'defaults' => array(
-//                            '__NAMESPACE__' => 'Api\Magento\Controller',
                             'controller' => 'Api\Magento\Controller\ConsoleMagento',
                             'action' => 'soapCreateMedia'
                         ),
@@ -196,9 +180,6 @@ return array(
         ),
     ),
     'view_manager'  =>  array(
-//        'template_map'  =>  array(
-//            'profile/index/index'   => __DIR__ . '/../view/profile/profile/profile.phtml',
-//        ),
         'template_path_stack'   =>  array(
             __DIR__ .'/../view',
         ),

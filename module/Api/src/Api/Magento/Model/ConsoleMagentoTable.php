@@ -34,6 +34,11 @@ class ConsoleMagentoTable
         $this->sql = new Sql($this->adapter);
     }
 
+    /**
+     * Description: This method once a product has been sent over the wire to Magento, updates corresponding row to clean/0.
+     * @param array $changedProducts
+     * @return string $result
+     */
     public function updateToClean($changedProducts)
     {
         $result = '';
@@ -54,56 +59,38 @@ class ConsoleMagentoTable
     }
 
     /**
-     * @Description: what this Method does is stack all attributes under it's correspoding entity id.
+     * @Description: what this Method does is stack all attributes under it's corresponding entity id.
      * @param $products
      * @return array | $grouped
      * */
     public function groupProducts($products)
     {
         $count = 0;
-        $changedAttributes = $changedValue = $changedID = $changedSkus = $grouped = $keys = $changedProduct = [];
-//        var_dump($products);
+        $changedAttributes = $changedValue = $changedID = $changedSkus = $grouped = [];
         foreach ( $products as $product ) {
-            $changedProduct[$count]['id'] = $product['id'];        //  an array with all entity ids cached.
-//            $changedID[$count] = $product['id'];        //  an array with all entity ids cached.
-//            $changedSkus[$count] = $product['sku'];     // array with all skus cached
-            $changedProduct[$count]['sku'] = $product['sku'];     // array with all skus cached
-            array_shift($product);      //  taking index id out.
-            array_shift($product);      //  taking index sku out.
-            $keys = array_keys($product);   //getting all the keys and putting them in an array.
-//            var_dump($keys);
-            $countAtt = 0;
-            foreach ( $keys as $attCount => $attribute ) {  //iterating through the indexed array.
-                $changedProduct[$count][$countAtt][$attribute] = $product[$attribute];
-//                $changedAttributes[$count][$countAtt] = $attribute;        //  caching all the attributes in an array.
-//                $changedValue[$count][$countAtt] = $product[$attribute];   //  caching all the attributes values that are dirty in an array.
-                $countAtt++;
+            $changedID[$count] = $product['id'];
+            $changedSkus[$count] = $product['sku'];
+            array_shift($product);
+            array_shift($product);
+            $keys = array_keys($product);
+            foreach ( $keys as $attCount => $attribute ) {
+                $changedAttributes[$count] = $attribute;
+                $changedValue[$count] = $product[$attribute];
             }
             $count++;
         }
-
-        foreach ( $changedProduct as $ind => $cp ) {
-            if ( $cp == 'id' ) {
-
-            }
-        }
-
-        var_dump($changedProduct);
-//        var_dump($changedAttributes, $changedValue );
-        $uniqueIds = array_values(array_unique($changedID));    //  These are the unique entity ids.
+        $uniqueIds = array_values(array_unique($changedID));
         $count = 0;
-        foreach ( $uniqueIds as $key => $uids ) {
+        foreach ($uniqueIds as $key => $uids) {
             foreach ( $changedID as $index => $ids ) {
                 if ( $uids == $ids ) {
-                        $grouped[$count]['id'] = $changedID[$index];
-                        $grouped[$count]['sku'] = $changedProduct[$index]['sku'];
-//                        $grouped[$count][$changedAttributes[$index]] = $changedValue[$index];
+                    $grouped[$count]['id'] = $uids;
+                    $grouped[$count]['sku'] = $changedSkus[$index];
+                    $grouped[$count][$changedAttributes[$index]] = $changedValue[$index];
                 }
-            $count++;
             }
+            $count++;
         }
-//        var_dump($grouped);     //here it screws up.
-            die();
         return $grouped;
     }
 
@@ -119,19 +106,6 @@ class ConsoleMagentoTable
         $soap = [];
         $count = 0;
         $selectAttributes = '';
-//        $select = $this->sql->select()->from('product')->columns(array('id' => 'entity_id', 'sku' => 'productid', 'ldate'=>'lastModifiedDate'));
-//        $select->join(array('u' => 'users'),'u.userid = product.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'));
-//        $select->where(array( 'dataState' => 1));
-
-//        $statement = $this->sql->prepareStatementForSqlObject($select);
-//        var_dump($this->sql->prepareStatementForSqlObject($select));
-//        die();
-//        $result = $statement->execute();
-//        $resultSet = new ResultSet;
-//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-//            $resultSet->initialize($result);
-//        }
-//        $products = $resultSet->toArray();
         $lookup = $this->productAttributeLookup($this->sql);
 //        foreach ($products as $product) {
             foreach( $lookup as $attribute ) {
@@ -171,11 +145,15 @@ class ConsoleMagentoTable
 //            return $result;
 //            $count++;
 //        }
-//        var_dump($soap);
-//        die();
         return $soap;
     }
 
+    /**
+     * @Description: This method grabs all product attributes with a dataState of 2. For attribute qty it adds another array called stock_data.
+     * Be mindful of this particular attribute, otherwise it will not update in Mage. Please refer to http://www.magentocommerce.com/api/soap/catalog/catalogProduct/catalog_product.create.html
+     * @param null
+     * @return array | $soapBundle
+     */
     public function fetchNewItems()
     {
         //fetches all attribute codes from look up table and looks them up in corresponding attribute tables only if they are new.
@@ -241,8 +219,6 @@ class ConsoleMagentoTable
             }
             $count++;
         }
-//        var_dump($soapBundle);
-//        die();
         return $soapBundle;
     }
 

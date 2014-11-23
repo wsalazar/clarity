@@ -356,9 +356,6 @@ class MagentoController extends AbstractActionController
 
     public function soapNewItemsAction()
     {
-//        $url = $this->url()->fromRoute('api-magento-new-items');
-//        echo '<pre>';
-//        var_dump($url);
         $newProducts = [];
         $loginSession= new Container('login');
         $userLogin = $loginSession->sessionDataforUser;
@@ -377,13 +374,9 @@ class MagentoController extends AbstractActionController
                 $newProducts = $this->getMagentoTable()->fetchNewProducts($groupedNewProducts);
             }
         }
-//        $newProducts = $this->getMagentoTable()->fetchNewItems();
         if ( !empty($newProducts) ) {
             if( $newProductResponse = $this->getMagentoSoap()->soapAddProducts($newProducts) ) {
                 $newProducts = $this->getMagentoTable()->adjustProductKeys($newProducts);
-//                echo '<pre>';
-//                var_dump($newProducts);
-//                die();
                 foreach( $newProductResponse as $index => $newResponse ) {
                     foreach( $newResponse as $key => $newEntityId ) {
                         if( $newEntityId ) {
@@ -391,11 +384,6 @@ class MagentoController extends AbstractActionController
                         }
                     }
                 }
-//                die();
-    //            if( $response ) {
-    ////                $url .= '?status=true';
-    //                return $this->redirect()->toRoute('apis');
-    //            }
             }
         } else {
             $result = "Error";
@@ -409,8 +397,6 @@ class MagentoController extends AbstractActionController
 
         return $response;
 
-////        $url .= '?status=false';
-//        return $this->redirect()->toRoute('apis');
     }
 
     public function soapImagesAction()

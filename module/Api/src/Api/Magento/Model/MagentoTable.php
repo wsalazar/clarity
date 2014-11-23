@@ -52,6 +52,12 @@ class MagentoTable {
         $this->sql = new Sql($this->adapter);
     }
 
+    /**
+     * Description: This method fetches any new images for existing products/skus.
+     * @param Null | $sku
+     * @param Null | $limit
+     * @return array $newImages
+     */
     public function fetchNewImages($sku = Null, $limit = Null)
     {
         $select = $this->sql->select()
@@ -83,7 +89,6 @@ class MagentoTable {
         if ($result instanceof ResultInterface && $result->isQueryResult()) {
             $resultSet->initialize($result);
         }
-//        echo $select->getSqlString(new \Pdo($this->adapter));
         $images = $resultSet->toArray();
         $soapCount = 0;
         $newImages = [];
@@ -101,38 +106,11 @@ class MagentoTable {
         return $newImages;
     }
 
-    public function fetchCleanCount()
-    {
-        $select = $this->sql->select();
-        $select->from('product');
-        $select->columns(array('id' => 'entity_id', 'ldate'=>'lastModifiedDate', 'item' => 'productid'));
-        $select->where(array( 'dataState' => '0'));
-
-        $statement = $this->sql->prepareStatementForSqlObject($select);
-        $result = $statement->execute();
-        $resultSet = new ResultSet;
-        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-            $resultSet->initialize($result);
-        }
-        return $resultSet->count();
-    }
-
-    public function fetchNewCount()
-    {
-        $select = $this->sql->select();
-        $select->from('product');
-        $select->where(array( 'dataState' => '2'));
-
-        $statement = $this->sql->prepareStatementForSqlObject($select);
-        $result = $statement->execute();
-
-        $resultSet = new ResultSet;
-        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-            $resultSet->initialize($result);
-        }
-        return $resultSet->count();
-    }
-
+    /**
+     * Description: This method sorts images selected from UI DataTable
+     * @param array $images
+     * @return array $soapImages
+     */
     public function orderImages($images)
     {
         $imgCount = 0;
@@ -149,6 +127,12 @@ class MagentoTable {
         return $soapImages;
     }
 
+    /**
+     * Description: This method grabs attributes for the same corresponding Sku if there are multiple attributes
+     * for the same Sku.
+     * @param array $checkboxSku
+     * @return array $grouped
+     */
     public function groupSku($checkboxSku)
     {
         $count = 0;
@@ -179,12 +163,15 @@ class MagentoTable {
                 }
             }
         }
-//        echo '<pre>';
-//        var_dump($grouped);
-//        die();
         return $grouped;
     }
 
+    /**
+     * Description: This method sorts new skus selected from UI DataTable.
+     * for the same Sku.
+     * @param array $checkboxNewSku
+     * @return array $groupedNewSku
+     */
     public function groupNewSku($checkboxNewSku)
     {
         $count = 0;
@@ -197,7 +184,12 @@ class MagentoTable {
         return $groupedNewSku;
     }
 
-
+    /**
+     * Description: This method sorts categories selected from UI DataTable.
+     * for the same Sku.
+     * @param array $checkboxCategory
+     * @return array $groupedCategories
+     */
     public function groupCategories($checkboxCategory)
     {
         $count = 0;
@@ -212,6 +204,12 @@ class MagentoTable {
         return $groupedCategories;
     }
 
+    /**
+     * Description: This method sorts Related Products selected from UI DataTable.
+     * for the same Sku.
+     * @param array $checkboxRelated
+     * @return array $groupedLinks
+     */
     public function groupRelated($checkboxRelated)
     {
         $count = 0;
@@ -238,24 +236,6 @@ class MagentoTable {
     public function fetchChangedProducts($sku = Null , $limit= Null, $productsTable)
     {
         $soapBundle = [];
-//        $select = $this->sql->select();
-//        $select->from('product');
-//        $select->columns(array('id' => 'entity_id', 'ldate'=>'lastModifiedDate', 'item' => 'productid'));
-////        $select->join(array('u' => 'users'),'u.userid = product.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'), Select::JOIN_LEFT);
-//        $filter = new Where;
-//        if( !empty($sku) ){
-//            $filter->like('product.productid',$sku.'%');
-//        }
-//        $select->where($filter);
-////        $select->limit((int)$limit);
-//        $statement = $this->sql->prepareStatementForSqlObject($select);
-//        $result = $statement->execute();
-//
-//        $resultSet = new ResultSet;
-//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-//            $resultSet->initialize($result);
-//        }
-//        $products = $resultSet->toArray();
         $results = $this->productAttributeLookup($this->sql);
         $soapCount = 0;
 //        foreach( $products as $product ) {
@@ -315,7 +295,13 @@ class MagentoTable {
         return $soapBundle;
     }
 
-
+    /**
+     * Description: This method is to populate the DataTable for new/to-be-deleted Related Products to be sent over the wire to focuscamera.
+     * It grabs all attributes that have a dataState of 2 or 3.
+     * @param $sku
+     * @param $limit
+     * @return array | $linker
+     */
     public function fetchLinkedProducts($sku = null, $limit = null)
     {
         $select = $this->sql->select()->columns(['entityId'=>'entity_id','sku'=>'productid'])->from('product');
@@ -355,16 +341,18 @@ class MagentoTable {
             $linker[$linkCount]['fullname']     = $linked['fname'] . ' ' . $linked['lname'];
             $linkCount++;
         }
-//        var_dump($linkedProducts);
-//        die();
         return $linker;
     }
 
+    /**
+     * Description: This method once Related Products have been sent over the wire to Magento updates the corresponding entity id
+     * to clean/0 or deletes the row depending on the current dataState.
+     * @param array $linkedProducts
+     * @return string $result
+     */
     public function updateLinkedProductstoClean($linkedProducts)
     {
         $result = '';
-//        var_dump($linkedProducts);
-//        die();
         $dataState = (int)$linkedProducts['dataState'];
         if ( $dataState === 3 ) {
             $delete = $this->sql->delete('productlink');
@@ -384,6 +372,12 @@ class MagentoTable {
         return $result;
     }
 
+    /**
+     * Description: This method once Categories have been sent over the wire to Magento updates the corresponding entity id
+     * to clean/0 or deletes the row depending on the current dataState.
+     * @param array $cats
+     * @return string $result
+     */
     public function updateProductCategoriesToClean($cats)
     {
         $result = '';
@@ -433,16 +427,13 @@ class MagentoTable {
         }
         return $result;
     }
-/*
- * select p.entity_id as entityId, p.productid, c.categoryId as categoryId, c.dataState, u.firstname as fname, u.lastname as lname, cat.category as title as sku from product p
- * inner join productcategory c
- * on c.entity_id=product.entity_id and c.dataState in(2,3)
- * left join users u
- * on u.userid = c.changedby
- * inner join newcategory cat
- * cat.category_id = c.category_id
- * */
 
+    /**
+     * Description: This method grabs categories that have changed state and displays them in the UI DataTable.
+     * @param Null | $sku
+     * @param Null | $limit
+     * @return array $soapCategories
+     */
     public function fetchChangedCategories($sku = null, $limit = null)
     {
         $soapCategories = [];
@@ -485,6 +476,11 @@ class MagentoTable {
         return $soapCategories;
     }
 
+    /**
+     * Description: This method once Images have been sent over the wire to Magento, updates corresponding row to clean/0.
+     * @param array $images
+     * @return string $result
+     */
     public function updateImagesToClean($images)
     {
         $result ='';
@@ -495,6 +491,11 @@ class MagentoTable {
         return $result;
     }
 
+    /**
+     * Description: This method once a product has been sent over the wire to Magento, updates corresponding row to clean/0.
+     * @param array $changedProducts
+     * @return string $result
+     */
     public function updateToClean($changedProducts)
     {
         $results = $sku = '';
@@ -514,6 +515,11 @@ class MagentoTable {
         return $results;
     }
 
+    /**
+     * Description: This method fetches the corresponding attributes based on the sku provided by the UI DataTable selection
+     * @param array $newProducts
+     * @return array $soapBundle
+     */
     public function fetchNewProducts($newProducts)
     {
         $soapBundle = [];
@@ -579,13 +585,16 @@ class MagentoTable {
             }
             $startCount++;
         }
-//        echo '<pre>';
-//        var_dump($soapBundle);
-//        die();
         return $soapBundle;
 
     }
 
+    /**
+     * Description: This method fetches new Products that have a dataState of 2 and return an array to the UI DataTable.
+     * @param array $sku
+     * @param array $limit
+     * @return array $soapBundle
+     */
     public function fetchNewItems($sku,$limit)
     {
         //fetches all attribute codes from look up table and looks them up in corresponding attribute tables only if they are new.
@@ -628,123 +637,20 @@ class MagentoTable {
         return $soapBundle;
     }
 
-
-//    public function updateNewProduct( $newProducts, $mageEntityId )
-//    {
-//        $sku = $newProducts['sku'];
-//        $oldEntityId = $newProducts['id'];
-//        array_shift($newProducts);
-//        array_shift($newProducts);
-//        array_shift($newProducts);
-//        $updateProduct = $this->sql->update('product')->set(['entity_id'=>$mageEntityId, 'dataState'=>0 ])->where(['productid'=>$sku]);
-//        $prdStmt = $this->sql->prepareStatementForSqlObject($updateProduct);
-//        $response = $prdStmt->execute();
-//        foreach( $newProducts as $attributeCode => $attributeValue ) {
-//            $lookupVals = $this->productAttributeLookup($this->sql, ['attribute_code'=>$attributeCode] );
-//            if( !empty($lookupVals[0]) ) {
-//                $attributeId = $lookupVals[0]['attId'];
-//                $dataType = $lookupVals[0]['dataType'];
-//                $update = $this->sql->update('productattribute_'.$dataType)->set(['entity_id'=>$mageEntityId, 'dataState'=>0])->where(['attribute_id'=>$attributeId, 'entity_id'=>$oldEntityId]);//$oeid]);
-//                $stmt = $this->sql->prepareStatementForSqlObject($update);
-//                $attributeResp = $stmt->execute();
-//            }
-//        }
-//        return true;
-//    }
-//
-//    public function updateExistingProduct($newProducts, $maxEntityId, $existingSku, $existingEntityId, $mageEntityId)
-//    {
-////        Mage entity id exists already so update with max entity id.
-//        $sku = $newProducts['sku'];
-//        $oldEntityId = $newProducts['id'];
-//        array_shift($newProducts);
-//        array_shift($newProducts);
-//        array_shift($newProducts);
-//        $existingProduct = $this->sql->update('product')->set(['entity_id'=>$maxEntityId])->where(['productid'=>$existingSku]);
-//        $existingStmt = $this->sql->prepareStatementForSqlObject($existingProduct);
-//        $existingResponse = $existingStmt->execute();
-//        $lookupExistingVals = $this->productAttributeLookup( $this->sql );
-//        foreach ( $lookupExistingVals as $key => $attributes ){
-//            $attributeId = $attributes[0]['attId'];
-//            $dataType = $attributes[0]['dataType'];
-//            $update = $this->sql->update('productattribute_'.$dataType)->set(['entity_id'=>$maxEntityId])->where(['attribute_id'=>$attributeId, 'entity_id'=>$existingEntityId]);
-//            $stmt = $this->sql->prepareStatementForSqlObject($update);
-//            $attributeResp = $stmt->execute();
-//        }
-//
-//        $updateExistingCat = $this->sql->update('productcategory')->set(['entity_id'=>$maxEntityId])->where(['entity_id'=>$existingEntityId]);
-//        $updateStatement = $this->sql->prepareStatementForSqlObject($updateExistingCat);
-//        $updateResponse = $updateStatement->execute();
-//        $updateExistingLink = $this->sql->update('productlink')->set(['entity_id'=>$maxEntityId])->where(['entity_id'=>$existingEntityId]);
-//        $updateExistingStmt = $this->sql->prepareStatementForSqlObject($updateExistingLink);
-//        $existingResponse = $updateExistingStmt->execute();
-//
-////        Update entity id with mage entity id.
-//        $updateNew = $this->sql->update('product')->set(['entity_id'=>$mageEntityId, 'dataState'=>0])->where(['productid'=>$sku]);
-//        $updateStmt = $this->sql->prepareStatementForSqlObject($updateNew);
-//        $newResponse = $updateStmt->execute();
-//        $lookupNewVals = $this->productAttributeLookup( $this->sql );
-//        foreach ( $lookupNewVals as $key => $attributes ){
-//            $attributeId = $attributes[0]['attId'];
-//            $dataType = $attributes[0]['dataType'];
-//            $update = $this->sql->update('productattribute_'.$dataType)->set(['entity_id'=>$mageEntityId ,'dataState'=>0])->where(['attribute_id'=>$attributeId, 'entity_id'=>$oldEntityId]);
-//            $stmt = $this->sql->prepareStatementForSqlObject($update);
-//            $attributeResp = $stmt->execute();
-//        }
-//        $existingEntityCategory = $this->sql->update('productcategory')->set(['entity_id'=>$mageEntityId])->where(['entity_id'=>$oldEntityId]);
-//        $existingEntityCategoryStmt = $this->sql->prepareStatementForSqlObject($existingEntityCategory);
-//        $existingResponse = $existingEntityCategoryStmt->execute();
-//        $existingEntityLink = $this->sql->update('productlink')->set(['entity_id'=>$mageEntityId])->where(['entity_id'=>$oldEntityId]);
-//        $existingEntityLinkStmt = $this->sql->prepareStatementForSqlObject($existingEntityLink);
-//        $existingResponse = $existingEntityLinkStmt->execute();
-////            $existingEntityImage = $this->sql->update('productattribute_imags')->set(['entity_id'=>$maxEntityId])->where(['entity_id'=>$oldEntityId]);
-////            $existingEntityImageStmt = $this->sql->prepareStatementForSqlObject($existingEntityImage);
-////            $existingResponse = $existingEntityImageStmt->execute();
-//        return true;
-//    }
-//
-//    public function updateNewItemsToClean($newProducts, $mageEntityId)
-//    {
-//        $result  = '';
-//        $dupEntityIdExists = $this->sql->select()->from('product')->columns(['entityId'=>'entity_id','sku'=>'productid'])->where(['entity_id'=>$mageEntityId]);
-//        $dupStatement = $this->sql->prepareStatementForSqlObject($dupEntityIdExists);
-//        $dupResponse = $dupStatement->execute();
-//        $dupSet = new ResultSet;
-//        if ($dupResponse instanceof ResultInterface && $dupResponse->isQueryResult()) {
-//            $dupSet->initialize($dupResponse);
-//        }
-//        $id = $dupSet->toArray();
-//        if( count($id) ) {
-//            $existingSku = $id[0]['sku'];
-//            $existingEntityId = $id[0]['entityId'];
-//            $entityId = $this->adapter->query('Select max(entity_id) from product', Adapter::QUERY_MODE_EXECUTE);
-//            foreach( $entityId as $eid ) {
-//                foreach( $eid as $maxEntityID ) {
-//                    $maxEntityId = $maxEntityID + 1;
-//                    $this->updateExistingProduct( $newProducts, $maxEntityId, $existingSku, $existingEntityId, $mageEntityId );
-//                    $result .= $newProducts['sku'] . ' has been added to Magento Admin with new ID ' . $mageEntityId . '<br />';
-//                }
-//            }
-//        } else {
-//            $response = $this->updateNewProduct($newProducts, $mageEntityId);
-//            $result .= $newProducts['sku'] . ' has been added to Magento Admin with ID ' . $mageEntityId . '<br />';
-//        }
-//        return $result;
-//    }
-
+    /**
+     * Description: This method once the new Product is created in Magento will return back another entity id which this method
+     * uses to update the current sku with the new entity id.
+     * @param array $newProducts
+     * @param array $mageEntityId
+     * @return Bool
+     */
     public function updateNewProduct( $newProducts, $mageEntityId )
     {
         $sku = $newProducts['sku'];
         $oldEntityId = $newProducts['id'];
-//        var_dump($oldEntityId);
-//        var_dump($newProducts);
         array_shift($newProducts);
         array_shift($newProducts);
         array_shift($newProducts);
-//        var_dump($newProducts);
-        echo "this is mage entity id " . $mageEntityId . "\n";
-        echo "this is the sku " . $sku . "\n";
-
         $updateProduct = $this->sql->update('product')->set(['entity_id'=>$mageEntityId, 'dataState'=>0 ])->where(['productid'=>$sku]);
         $prdStmt = $this->sql->prepareStatementForSqlObject($updateProduct);
         $response = $prdStmt->execute();
@@ -753,7 +659,6 @@ class MagentoTable {
             if( !empty($lookupVals[0]) ) {
                 $attributeId = $lookupVals[0]['attId'];
                 $dataType = $lookupVals[0]['dataType'];
-//                echo $attributeId . ' ' . $dataType. ' ' ;
                 $update = $this->sql->update('productattribute_'.$dataType)->set(['entity_id'=>$mageEntityId, 'dataState'=>0])->where(['attribute_id'=>$attributeId, 'entity_id'=>$oldEntityId]);//$oeid]);
                 $stmt = $this->sql->prepareStatementForSqlObject($update);
                 $attributeResp = $stmt->execute();
@@ -762,6 +667,18 @@ class MagentoTable {
         return true;
     }
 
+    /**
+     * Description: This method once the new Product is created in Magento will return back another entity id which this method
+     * uses to update the current sku with the new entity id. However if the entity id returned from Mage already exists in Spex it will
+     * query for the max entity id and add one. Then it will update the sku with the dup entity id with the max entity id plus one
+     * and the Sku we sent over the wire will be updated with the entity id from Mage.
+     * @param array $newProducts
+     * @param array $maxEntityId
+     * @param array $existingSku
+     * @param array $existingEntityId
+     * @param array $mageEntityId
+     * @return Bool
+     */
     public function updateExistingProduct($newProducts, $maxEntityId, $existingSku, $existingEntityId, $mageEntityId)
     {
 //        Mage entity id exists already so update with max entity id.
@@ -773,7 +690,6 @@ class MagentoTable {
         $existingProduct = $this->sql->update('product')->set(['entity_id'=>$maxEntityId])->where(['productid'=>$existingSku]);
         $existingStmt = $this->sql->prepareStatementForSqlObject($existingProduct);
         $existingResponse = $existingStmt->execute();
-
         $lookupExistingVals = $this->productAttributeLookup( $this->sql );
         foreach ( $lookupExistingVals as $key => $attributes ){
             $attributeId = $attributes['attId'];
@@ -817,6 +733,13 @@ class MagentoTable {
         return true;
     }
 
+    /**
+     * Description: This method checks to see if the entity id returned from Mage exists in Spex or not and performs the corresponding action
+     * accordingly.
+     * @param array $newProducts
+     * @param array $mageEntityId
+     * @return string $result
+     */
     public function updateNewItemsToClean($newProducts, $mageEntityId)
     {
         $result  = $maxEntityId = '';
@@ -849,7 +772,7 @@ class MagentoTable {
 
     /**
      * @Description: This method is different because of the checkboxes in the UI. I will probably have to refactor this
-     * at some point in the future. For now it works perfectly. I have an index property that contains a string or an array.
+     * at some point in the future. For now it works the way I want it to. I have an index property that contains a string or an array.
      * The array is because of qty. Qty in Mage Soap API has to be in the stock_data array. In spex it doens't exist so I have
      * to account for this. When sent through the wire I have to insert it but when updating attributes tables I have to
      * take it out so that update statement for int table works properly.
@@ -881,8 +804,6 @@ class MagentoTable {
                 }
             }
         }
-//        var_dump($productSkus);
-//        die();
         return $productSkus;
     }
 
@@ -912,8 +833,6 @@ class MagentoTable {
             }
             $this->stockData = $shiftedStockData + $this->stockData;
         }
-//        var_dump($productSkus);
-//        die();
         return $productSkus;
     }
 

@@ -78,19 +78,12 @@ class ConsoleMagentoController  extends AbstractActionController{
         $this->soap = $this->getServiceLocator()->get('Api\Magento\Model\MageSoap');
 
         $newItems = $console->fetchNewItems();
-//        var_dump($newItems);
-//        die();
         if( !empty($newItems) ) {
             if ( $newProductResponse = $this->soap->soapAddProducts($newItems) ) {
-//                var_dump($newProductResponse);
-//                die();
                 $newProducts = $this->mage->adjustProductKeys($newItems);
-                var_dump($newProducts);
-
                 foreach( $newProductResponse as $index => $newResponse ) {
                     foreach( $newResponse as $key => $newEntityId ) {
                         if( $newEntityId ) {
-                            echo 'index ' . $index . ' key ' . $key . " combined ". (int)$index.$key . "\n";
                             if ( $index === 0 ) {
                                 $result .= $this->mage->updateNewItemsToClean($newProducts[$key], $newEntityId);
                             } else {
@@ -118,19 +111,9 @@ class ConsoleMagentoController  extends AbstractActionController{
         $result = '';
         if( !empty($changedProducts) ) {
             $changedProducts = $this->console->groupProducts($changedProducts);
-//            var_dump($changedProducts);
-            die();
-//            foreach( $changedProducts as $key => $prds ) {
-//                echo $key . "\n";
-//                var_dump( $prds );
-//            }
-//                var_dump($prds);
                 $changeResponse = $this->soap->soapChangedProducts($changedProducts);
-////                $changedProducts = $this->mage->adjustProductKeys($changedProducts);
                 foreach ( $changeResponse as  $index => $itemResponse ) {
                     foreach ( $itemResponse as $key => $soapResponse ) {
-                        echo 'index ' . $index . ' key ' . $key . " combined ". (int)$index.$key . "\n";
-
                         if( $soapResponse ) {
                             if ( $index === 0 ) {
                                 $result .= $this->console->updateToClean($changedProducts[$key]);
@@ -140,9 +123,8 @@ class ConsoleMagentoController  extends AbstractActionController{
                         }
                     }
                 }
-//            }
         }
-/*        if( !empty($linked) ) {
+        if( !empty($linked) ) {
            $linkedResponse = $this->soap->soapLinkedProducts($linked);
             foreach ( $linkedResponse as $index => $linkResponse ) {
                 foreach ( $linkResponse as $key => $soapResponse ) {
@@ -161,12 +143,16 @@ class ConsoleMagentoController  extends AbstractActionController{
             foreach ( $categoryResponse as $index =>  $catResponse ) {
                 foreach ( $catResponse as $key => $soapResponse ) {
                     if( $soapResponse ) {
-                        $result .= $this->mage->updateProductCategoriesToClean($categories[$key]);
+                        if( $index == 0 ) {
+                            $result .= $this->mage->updateProductCategoriesToClean($categories[$key]);
+                        } else {
+                            $result .= $this->mage->updateProductCategoriesToClean($categories[(int)$index.$key]);
+                        }
                     }
                 }
             }
         }
-  */      if( empty($result) ) {
+        if( empty($result) ) {
             $result = 'Nothing has been uploaded.';
         }
         echo $result;
