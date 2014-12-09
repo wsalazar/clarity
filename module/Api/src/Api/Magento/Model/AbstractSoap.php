@@ -43,7 +43,7 @@ abstract class AbstractSoap
         while( $a < count($packet) ){
             $x = 0;
             while($x < 10 && $a < count($packet)) {
-                echo 'x ' . $x . ' a ' . $a . "\n";
+                //echo 'x ' . $x . ' a ' . $a . "\n";
                 if( isset($packet[$a]['dataState']) && $packet[$a]['dataState'] == 3 ) {
                     $resource = $packet[$a]['resource'];
                     $batchCall[$x] = array($resource, $packet[$a]);

@@ -238,27 +238,36 @@ class MagentoTable {
     public function fetchChangedProducts($sku = Null , $limit= Null, $productsTable)
     {
         $soapBundle = [];
-//        $select = $this->sql->select();
-//        $select->from('product');
-//        $select->columns(array('id' => 'entity_id', 'ldate'=>'lastModifiedDate', 'item' => 'productid'));
-////        $select->join(array('u' => 'users'),'u.userid = product.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'), Select::JOIN_LEFT);
-//        $filter = new Where;
-//        if( !empty($sku) ){
-//            $filter->like('product.productid',$sku.'%');
-//        }
-//        $select->where($filter);
-////        $select->limit((int)$limit);
-//        $statement = $this->sql->prepareStatementForSqlObject($select);
-//        $result = $statement->execute();
+        $select = $this->sql->select();
+        $select->from('product');
+        $select->columns([
+                    'id'                =>  'entity_id',
+                    'status'            =>  'status',
+                    'qty'               =>  'quantity',
+                    'price'             =>  'price',
+                    'content_reviewed'  =>  'contentreviewed',
+                    'ldate'             =>  'lastModifiedDate',
+                    'item'              =>  'productid'
+        ]);
+        $select->join(array('u' => 'users'),'u.userid = product.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'), Select::JOIN_LEFT);
+        $filter = new Where;
+        $filter->equalTo('product.dataState',1);
+        if( !empty($sku) ){
+            $filter->like('product.productid',$sku.'%');
+        }
+        $select->where($filter);
+        $select->limit((int)$limit);
+        $statement = $this->sql->prepareStatementForSqlObject($select);
+        $result = $statement->execute();
 //
-//        $resultSet = new ResultSet;
-//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-//            $resultSet->initialize($result);
-//        }
-//        $products = $resultSet->toArray();
+        $resultSet = new ResultSet;
+        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+            $resultSet->initialize($result);
+        }
+        $products = $resultSet->toArray();
         $results = $this->productAttributeLookup($this->sql);
         $soapCount = 0;
-//        foreach( $products as $product ) {
+        foreach( $products as $product ) {
             foreach( $results as $attributes ) {
                 $dataType = $attributes['dataType'];
                 $attributeId = $attributes['attId'];
@@ -269,7 +278,7 @@ class MagentoTable {
     //                                                 ->where(['attribute_id'=>$attributeId,/*'entity_id'=>$product['id'], */'productattribute_'.$dataType.'.dataState'=>1])
                                                      ->columns(['id'=>'entity_id', $attributeCode=>'value', 'ldate'=>'lastModifiedDate']);
                         $selectAttribute->join(array('u' => 'users'),'u.userid = productattribute_'.$dataType.'.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'), Select::JOIN_LEFT);
-                        $selectAttribute->join(array('p' => 'product'),'p.entity_id= productattribute_'.$dataType.'.entity_id' ,['item'=>'productid'], Select::JOIN_LEFT);
+//                        $selectAttribute->join(array('p' => 'product'),'p.entity_id= productattribute_'.$dataType.'.entity_id' ,['item'=>'productid'], Select::JOIN_LEFT);
                         //TODO If website is to be sent over this join is where it will go.
                         $filter = new Where;
                         $filter->equalTo('productattribute_'.$dataType.'.attribute_id',$attributeId);
@@ -298,8 +307,9 @@ class MagentoTable {
                         if(!empty($productAttributes )) {
 //                            for ( $i = 0; $i < $limit; $i++ ) {
                                 foreach ( $productAttributes as $prdAtts ) {
-                                    $soapBundle[$soapCount]['id'] = $prdAtts['id'];
-                                    $soapBundle[$soapCount]['item'] = $prdAtts['item'];
+                                    $soapBundle[$soapCount]['id'] = $product['id'];
+                                    $soapBundle[$soapCount]['item'] = $product['item'];
+                                    if (isset($product['status']) )
                                     $soapBundle[$soapCount]['oproperty'] = $attributeCode;
                                     $property = preg_match('(_)',$attributeCode) ? str_replace('_',' ',$attributeCode) : $attributeCode;
                                     $soapBundle[$soapCount]['property'] = ucfirst($property);
@@ -312,6 +322,7 @@ class MagentoTable {
                         }       //  End of if
                     }       //  End of if
             }       //End of foreach
+        }   //End of foreach
         return $soapBundle;
     }
 
@@ -523,6 +534,10 @@ class MagentoTable {
             $select = $this->sql->select()->from('product')->columns([
                 'productType'   =>  'product_type',
                 'website'       =>  'website',
+                'status'        =>  'status',
+                'qty'      =>  'quantity',
+                'price'         =>  'price',
+                'content_reviewed'  => 'contentreviewed',
             ])->where(['entity_id'=>$nProd['id']]);
             $statement = $this->sql->prepareStatementForSqlObject($select);
             $result = $statement->execute();
@@ -558,14 +573,23 @@ class MagentoTable {
                         $soapBundle[$startCount]['id'] = $entityId;
                         $soapBundle[$startCount]['sku'] = $sku;
                         $soapBundle[$startCount]['websites'] = [$products[$index]['website']];
+                        if ( is_null($products[$index]['status']) ) {
+                            $soapBundle[$startCount]['status'] = 0;
+                        } else {
+                            $soapBundle[$startCount]['status'] = $products[$index]['status'];
+                        }
+                        $soapBundle[$startCount]['stock_data']['qty'] = $products[$index]['qty'];
+                        $soapBundle[$startCount]['price'] = $products[$index]['price'];
+                        $soapBundle[$startCount]['content_reviewed'] = $products[$index]['content_reviewed'];
                         if ( array_key_exists($attributeCode,$this->stockData) ) {
                             $soapBundle[$startCount]['stock_data'][$attributeCode] = $valueOption[$attributeCode];
                         } else {
-                            if( is_null($attributeValues[$keyValue][$attributeCode]) && $attributeCode ==  'status' ){
-                                $soapBundle[$startCount][$attributeCode] = 0;
-                            }
+//                            if( is_null($attributeValues[$keyValue][$attributeCode]) && $attributeCode ==  'status' ){
+//                                $soapBundle[$startCount][$attributeCode] = 0;
+//                            }
                             if( isset($attributeValues[$keyValue][$attributeCode]) ) {
-                                $soapBundle[$startCount][$attributeCode] = $attributeCode == 'status' ? (int)$valueOption[$attributeCode] : $valueOption[$attributeCode] ;
+//                                $soapBundle[$startCount][$attributeCode] = $attributeCode == 'status' ? (int)$valueOption[$attributeCode] : $valueOption[$attributeCode] ;
+                                $soapBundle[$startCount][$attributeCode] = $valueOption[$attributeCode] ;
 //                                if ( $attributeCode ==  'status' ) {
 //                                    $soapBundle[$startCount][$attributeCode] = (int)$valueOption[$attributeCode];
 //                                } else {
@@ -742,8 +766,8 @@ class MagentoTable {
         array_shift($newProducts);
         array_shift($newProducts);
 //        var_dump($newProducts);
-        echo "this is mage entity id " . $mageEntityId . "\n";
-        echo "this is the sku " . $sku . "\n";
+//        echo "this is mage entity id " . $mageEntityId . "\n";
+//        echo "this is the sku " . $sku . "\n";
 
         $updateProduct = $this->sql->update('product')->set(['entity_id'=>$mageEntityId, 'dataState'=>0 ])->where(['productid'=>$sku]);
         $prdStmt = $this->sql->prepareStatementForSqlObject($updateProduct);

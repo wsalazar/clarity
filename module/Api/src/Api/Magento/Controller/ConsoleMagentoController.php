@@ -117,9 +117,9 @@ class ConsoleMagentoController  extends AbstractActionController{
         $categories = $this->mage->fetchChangedCategories();
         $result = '';
         if( !empty($changedProducts) ) {
-            $changedProducts = $this->console->groupProducts($changedProducts);
-//            var_dump($changedProducts);
-//            die();
+           // $changedProducts = $this->console->groupProducts($changedProducts);
+            //var_dump($changedProducts);
+            //die();
 //            foreach( $changedProducts as $key => $prds ) {
 //                echo $key . "\n";
 //                var_dump( $prds );
@@ -129,7 +129,7 @@ class ConsoleMagentoController  extends AbstractActionController{
 ////                $changedProducts = $this->mage->adjustProductKeys($changedProducts);
                 foreach ( $changeResponse as  $index => $itemResponse ) {
                     foreach ( $itemResponse as $key => $soapResponse ) {
-                        echo 'index ' . $index . ' key ' . $key . " combined ". (int)$index.$key . "\n";
+                       // echo 'index ' . $index . ' key ' . $key . " combined ". (int)$index.$key . "\n";
 
                         if( $soapResponse ) {
                             if ( $index === 0 ) {

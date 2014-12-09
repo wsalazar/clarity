@@ -62,18 +62,25 @@ class ConsoleMagentoTable
     {
         $count = 0;
         $changedAttributes = $changedValue = $changedID = $changedSkus = $grouped = [];
+        //var_dump($products);
         foreach ( $products as $product ) {
             $changedID[$count] = $product['id'];
             $changedSkus[$count] = $product['sku'];
+
             array_shift($product);
             array_shift($product);
+            var_dump($product);
             $keys = array_keys($product);
             foreach ( $keys as $attCount => $attribute ) {
-                $changedAttributes[$count] = $attribute;
-                $changedValue[$count] = $product[$attribute];
+                $changedAttributes[$attCount] = $attribute;
+                $changedValue[$attCount] = $product[$attribute];
             }
             $count++;
         }
+
+        var_dump($changedAttributes);
+        //var_dump($changedValue);
+        //var_dump($products);
         $uniqueIds = array_values(array_unique($changedID));
         $count = 0;
         foreach ($uniqueIds as $key => $uids) {
@@ -86,8 +93,8 @@ class ConsoleMagentoTable
                 }
             $count++;
             }
-//        var_dump($grouped);     //here it screws up.
-//            die();
+        var_dump($grouped);     //here it screws up.
+            die();
         return $grouped;
     }
 
@@ -103,21 +110,30 @@ class ConsoleMagentoTable
         $soap = [];
         $count = 0;
         $selectAttributes = '';
-//        $select = $this->sql->select()->from('product')->columns(array('id' => 'entity_id', 'sku' => 'productid', 'ldate'=>'lastModifiedDate'));
-//        $select->join(array('u' => 'users'),'u.userid = product.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'));
-//        $select->where(array( 'dataState' => 1));
+        $select = $this->sql->select()->from('product')->columns([
+                        'id'                =>  'entity_id',
+                        'website'           =>  'website',
+                        'status'            =>  'status',
+                        'qty'               =>  'quantity',
+                        'price'             =>  'price',
+                        'content_reviewed'  =>  'contentreviewed',
+                        'sku'               =>  'productid',
+        //                'ldate'             =>  'lastModifiedDate'
+        ]);
+        $select->join(array('u' => 'users'),'u.userid = product.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'));
+        $select->where(['dataState' => 1,'productid'=>'XBDJIVisionBPStd']);
 
-//        $statement = $this->sql->prepareStatementForSqlObject($select);
+        $statement = $this->sql->prepareStatementForSqlObject($select);
 //        var_dump($this->sql->prepareStatementForSqlObject($select));
 //        die();
-//        $result = $statement->execute();
-//        $resultSet = new ResultSet;
-//        if ($result instanceof ResultInterface && $result->isQueryResult()) {
-//            $resultSet->initialize($result);
-//        }
-//        $products = $resultSet->toArray();
+        $result = $statement->execute();
+        $resultSet = new ResultSet;
+        if ($result instanceof ResultInterface && $result->isQueryResult()) {
+            $resultSet->initialize($result);
+        }
+        $products = $resultSet->toArray();
         $lookup = $this->productAttributeLookup($this->sql);
-//        foreach ($products as $product) {
+        foreach ($products as $product) {
             foreach( $lookup as $attribute ) {
 //                $entityId = $product['id'];
 //                $soap[$count]['id'] = $entityId;
@@ -126,9 +142,22 @@ class ConsoleMagentoTable
                 $attributeId = $attribute['attId'];
                 $attributeCode = $attribute['attCode'];
                 if( $attributeCode != 'qty' ) {
-                    $selectAttributes = $this->sql->select()->from('productattribute_'.$dataType)->columns([$attributeCode=>'value'])->where(['attribute_id'=>$attributeId, 'productattribute_'.$dataType.'.dataState'=>1]);
+                    $selectAttributes = $this->sql->select()
+                                                  ->from('productattribute_'.$dataType)
+                                                  ->columns([$attributeCode=>'value'])
+                                                  ->where(['attribute_id'=>$attributeId, 'productattribute_'.$dataType.'.dataState'=>1, 'entity_id'=>96851]);
                     $selectAttributes->join(array('u' => 'users'),'u.userid = productattribute_'.$dataType.'.changedby ' ,array('fName' => 'firstname', 'lName' => 'lastname'),Select::JOIN_LEFT);
-                    $selectAttributes->join(array('p' => 'product'),'p.entity_id = productattribute_'.$dataType.'.entity_id' ,array('id' => 'entity_id', 'sku' => 'productid'),Select::JOIN_LEFT);
+  //                  $selectAttributes->join(
+  //                      ['p' => 'product'],'p.entity_id = productattribute_'.$dataType.'.entity_id' ,
+  //                      //['id' => 'entity_id', 'sku' => 'productid'],
+ //                       ['id'                =>  'entity_id',
+  //                      'website'           =>  'website',
+  //                      'status'            =>  'status',
+  //                      'qty'               =>  'quantity',     //is also in attributes table
+  //                      'price'             =>  'price',        //is also in attributes table
+   //                     'content_reviewed'  =>  'contentreviewed',  //is also in the attributes table
+  //                      'sku'               =>  'productid',],
+   //                     Select::JOIN_LEFT);
                 }
 //                    echo $selectAttributes->getSqlString(new \PDO($this->adapter)) . "\n";
                 $statementAttributes = $this->sql->prepareStatementForSqlObject($selectAttributes);
@@ -139,9 +168,14 @@ class ConsoleMagentoTable
                 }
                 $attributes = $resultSetAttributes->toArray();
                 foreach ($attributes as $atts ) {
-                    $soap[$count]['id'] = $atts['id'];
-                    $soap[$count]['sku'] = $atts['sku'];
-//                    if( $attributeCode == 'qty' ) {
+                    $soap[$count]['id'] = $product['id'];
+                    $soap[$count]['sku'] = $product['sku'];
+                    $soap[$count]['website'] = $product['website'];
+                    $soap[$count]['status'] = $product['status'];
+                    $soap[$count]['content_reviewed'] = $product['content_reviewed'];
+                    $soap[$count]['price'] = $product['price'];
+                    $soap[$count]['stock_data']['qty'] = $product['qty'];
+//                   if( $attributeCode == 'qty' ) {
 //                        $soap[$count]['stock_data'][$attributeCode] = $atts[$attributeCode];
 //                    } else {
 //                    if ( $attributeCode != 'qty' ) {
@@ -151,10 +185,10 @@ class ConsoleMagentoTable
                     $count++;
                 }
 //                $count++;
-            }
+            }   //end of foreach
 //            return $result;
 //            $count++;
-//        }
+        }   //end of foreach
 //        var_dump($soap);
 //        die();
         return $soap;
