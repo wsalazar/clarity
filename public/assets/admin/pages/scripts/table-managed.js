@@ -1894,24 +1894,7 @@ var TableManaged = function () {
                     "first": "First"
                 }
             }});
-//        $('#kpiNewProducts tbody').on('click', 'td.details-control', function () {
-//           var tr = $(this).closest('tr');
-//            var row = dtable.api().row( tr );
-//
-//            if ( row.child.isShown() ) {
-//                // This row is already open - close it
-//                console.log('hoho');
-//                row.child.hide();
-//                tr.removeClass('shown');
-//            }
-//            else {
-//                console.log('haha');
-//                // Open this row
-////                row.child( format(row.data()) ).show();
-//                row.child().show();
-//                tr.addClass('shown');
-//            }
-//        } );
+
         var groupNewSku = $('#skuNewProducts');
 
         $('#kpiNewProducts tbody').on('change', '#skuNewProduct',function (e) {
